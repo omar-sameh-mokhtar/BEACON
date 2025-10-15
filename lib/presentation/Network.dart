@@ -4,6 +4,11 @@ class Network_page extends StatelessWidget {
 
   @override
   Widget  build(BuildContext context) {
-    return const Placeholder();
+    return (MaterialApp(
+      title: "network page",
+      home: Scaffold(
+
+      ),
+    ));
   }
 }
