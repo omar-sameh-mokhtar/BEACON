@@ -43,10 +43,10 @@ class ChattingPageState extends State<ChattingPage> {
               ),
             ),
           ),
-          SizedBox(height: height_ * 0.04),
+          SizedBox(height: height_ * 0.01),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.only(bottom: height_ * 0.1),
+              padding: EdgeInsets.only(bottom: height_ * 0.001),
               child: Container(
                 width: width_ * 0.95,
                 decoration: const BoxDecoration(
@@ -56,27 +56,10 @@ class ChattingPageState extends State<ChattingPage> {
               ),
             ),
           ),
-          Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: width_ * 0.025,
-              vertical: 10,
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    MessageButton('HELP'),
-                    MessageButton('LOCATION'),
-                    MessageButton('MEDICAL'),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
+          SizedBox(height: height_ * 0.01),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 15),
+            width: width_ * 0.95,
             decoration: BoxDecoration(
               color: const Color.fromARGB(255, 48, 48, 48),
               borderRadius: BorderRadius.circular(30),
@@ -97,12 +80,29 @@ class ChattingPageState extends State<ChattingPage> {
               ],
             ),
           ),
+          SizedBox(height: height_ * 0.01),
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: width_ * 0.025,
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    MessageButton('HELP'),
+                    MessageButton('LOCATION'),
+                    MessageButton('MEDICAL'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: height_ * 0.03),
         ],
       ),
     ));
   }
-
-
 
 
   Widget MessageButton(String text) {
@@ -111,7 +111,7 @@ class ChattingPageState extends State<ChattingPage> {
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color.fromARGB(255, 48, 48, 48),
         foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
       child: Text(text),
     );
