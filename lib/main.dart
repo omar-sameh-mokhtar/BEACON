@@ -1,3 +1,4 @@
+import 'package:beacon/presentation/pages/chat.dart';
 import 'package:flutter/material.dart';
 import 'presentation/pages/dashboard.dart';
 
@@ -16,7 +17,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.red,
       ),
-      home: const NetworkDashboardPage(),
+      home: const ChattingPage(),
     );
   }
 }
