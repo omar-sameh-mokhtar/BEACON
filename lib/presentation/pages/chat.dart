@@ -27,20 +27,23 @@ class ChattingPageState extends State<ChattingPage> {
           titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20),
           centerTitle: true,
         ),
-        body: Column(children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 16.0),
-            child: Container(
-              height: MediaQuery.of(context).size.height * 0.1,
-              width: MediaQuery.of(context).size.width * 0.80,
-              decoration: const BoxDecoration(
-                color: Color.fromARGB(255, 48, 48, 48),
-                borderRadius: BorderRadius.all(
-                  Radius.circular(20.0),
-                ),
-              ),
-            ),
-          )
-        ])));
+        body: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Center(
+                child: Container(
+                    height: MediaQuery.of(context).size.height * 0.07,
+                  width: MediaQuery.of(context).size.width * 0.95,
+                  decoration: const BoxDecoration(
+                    color: Color.fromARGB(255, 48, 48, 48),
+                    borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                  ),
+                )
+
+
+              )
+            ]
+    ),
+    ));
   }
 }
