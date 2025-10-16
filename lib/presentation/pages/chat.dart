@@ -10,12 +10,30 @@ class ChattingPage extends StatefulWidget {
 class ChattingPageState extends State<ChattingPage> {
   String selectedPerson = "Eslam";
 
+  final List<Map<String, dynamic>> _messages = [];
+  final TextEditingController _textController = TextEditingController();
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  void _sendMessage({String? text, bool isMe = true}) {
+    String message = text ?? _textController.text;
+    if (message.isEmpty) return;
+    setState(() {
+      _messages.add({'text': message, 'isMe': isMe});
+      _textController.clear();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     double width_ = MediaQuery.of(context).size.width;
     double height_ = MediaQuery.of(context).size.height;
 
-    return (Scaffold(
+    return Scaffold(
       backgroundColor: const Color(0xFF1E1E1E),
       appBar: AppBar(
         backgroundColor: const Color(0xFF1E1E1E),
@@ -42,12 +60,12 @@ class ChattingPageState extends State<ChattingPage> {
                 color: Color.fromARGB(255, 48, 48, 48),
                 borderRadius: BorderRadius.all(Radius.circular(20.0)),
               ),
-                child: Row(
-                  children: [
-                    Icon(Icons.radar, color: Colors.white),
-                    SizedBox(width: 10),
-                    Text("3 com" , style: TextStyle(color: Colors.white)),
-                  ],
+              child: Row(
+                children: [
+                  const Icon(Icons.radar, color: Colors.white),
+                  const SizedBox(width: 10),
+                  const Text("3 com", style: TextStyle(color: Colors.white)),
+                ],
               ),
             ),
           ),
@@ -61,6 +79,28 @@ class ChattingPageState extends State<ChattingPage> {
                   color: Color.fromARGB(255, 48, 48, 48),
                   borderRadius: BorderRadius.all(Radius.circular(20.0)),
                 ),
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(10),
+                  itemCount: _messages.length,
+                  itemBuilder: (context, index) {
+                    final msg = _messages[index];
+                    return Container(
+                      margin: const EdgeInsets.symmetric(vertical: 5),
+                      alignment: msg['isMe'] ? Alignment.centerRight : Alignment.centerLeft,
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: msg['isMe'] ? Colors.red : Colors.grey[700],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          msg['text'],
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ),
@@ -72,50 +112,48 @@ class ChattingPageState extends State<ChattingPage> {
               color: const Color.fromARGB(255, 48, 48, 48),
               borderRadius: BorderRadius.circular(30),
             ),
-            child: const Row(
+            child: Row(
               children: [
                 Expanded(
                   child: TextField(
-                    style: TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: 'Type or speak a message ',
+                    style: const TextStyle(color: Colors.white),
+                    controller: _textController,
+                    decoration: const InputDecoration(
+                      hintText: 'Type or speak a message',
                       hintStyle: TextStyle(color: Colors.white54),
                       border: InputBorder.none,
                     ),
                   ),
                 ),
-                Icon(Icons.mic, color: Colors.white),
+                IconButton(
+                  icon: const Icon(Icons.send, color: Colors.white),
+                  onPressed: () => _sendMessage(),
+                ),
+                const Icon(Icons.mic, color: Colors.white),
               ],
             ),
           ),
           SizedBox(height: height_ * 0.01),
           Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: width_ * 0.025,
-            ),
-            child: Column(
+            padding: EdgeInsets.symmetric(horizontal: width_ * 0.025),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    MessageButton('HELP'),
-                    MessageButton('LOCATION'),
-                    MessageButton('MEDICAL'),
-                  ],
-                ),
+                MessageButton('HELP'),
+                MessageButton('LOCATION'),
+                MessageButton('MEDICAL'),
               ],
             ),
           ),
           SizedBox(height: height_ * 0.03),
         ],
       ),
-    ));
+    );
   }
-
 
   Widget MessageButton(String text) {
     return ElevatedButton(
-      onPressed: () {},
+      onPressed: () => _sendMessage(text: text, isMe: false),
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color.fromARGB(255, 48, 48, 48),
         foregroundColor: Colors.white,
