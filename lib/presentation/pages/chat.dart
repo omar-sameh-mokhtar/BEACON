@@ -35,11 +35,19 @@ class ChattingPageState extends State<ChattingPage> {
         children: [
           Center(
             child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
               height: height_ * 0.07,
               width: width_ * 0.95,
               decoration: const BoxDecoration(
                 color: Color.fromARGB(255, 48, 48, 48),
                 borderRadius: BorderRadius.all(Radius.circular(20.0)),
+              ),
+                child: Row(
+                  children: [
+                    Icon(Icons.radar, color: Colors.white),
+                    SizedBox(width: 10),
+                    Text("3 com" , style: TextStyle(color: Colors.white)),
+                  ],
               ),
             ),
           ),
