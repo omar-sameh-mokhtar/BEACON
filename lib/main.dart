@@ -1,6 +1,9 @@
-import 'package:beacon/presentation/pages/chat.dart';
 import 'package:flutter/material.dart';
+
+// Import your pages
 import 'presentation/pages/dashboard.dart';
+import 'presentation/pages/chat.dart';
+import 'presentation/pages/profile.dart'; // 👈 make sure this file exists
 
 void main() {
   runApp(const MyApp());
@@ -15,11 +18,26 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'BEACON',
       theme: ThemeData(
-        primarySwatch: Colors.red,
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: Colors.black,
+        primaryColor: Colors.red,
+        colorScheme: ColorScheme.dark(
+          primary: Colors.red,
+          secondary: Colors.redAccent,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
       ),
-      home: const ChattingPage(),
+
+      // 👇 Change this line to test the Profile Page
+      home: const ProfilePage(),
+
+      // You can later switch back to:
+      // home: const ChattingPage(),
+      // or home: const NetworkDashboardPage(),
     );
   }
 }
-
-
