@@ -1,9 +1,10 @@
+import 'package:beacon/presentation/pages/chat.dart';
+import 'package:beacon/presentation/pages/dashboard.dart';
+import 'package:beacon/presentation/pages/resources.dart';
 import 'package:flutter/material.dart';
 
-// Import your pages
-import 'presentation/pages/dashboard.dart';
-import 'presentation/pages/chat.dart';
-import 'presentation/pages/profile.dart'; // 👈 make sure this file exists
+import 'presentation/pages/profile.dart';
+import 'presentation/pages/landing_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -32,12 +33,8 @@ class MyApp extends StatelessWidget {
         ),
       ),
 
-      // 👇 Change this line to test the Profile Page
-      home: const ProfilePage(),
+      home: const LandingPage(),
 
-      // You can later switch back to:
-      // home: const ChattingPage(),
-      // or home: const NetworkDashboardPage(),
     );
   }
 }
