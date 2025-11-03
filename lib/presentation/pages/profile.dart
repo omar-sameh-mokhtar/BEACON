@@ -1,4 +1,5 @@
 import 'package:beacon/presentation/widgets/NavigationBarBottom.dart';
+import 'package:beacon/presentation/widgets/AppBarTop.dart';
 import 'package:flutter/material.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -28,14 +29,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        title: const Text(
-          "Profile",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-      ),
+      appBar: AppBarTop(title:"Profile"),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

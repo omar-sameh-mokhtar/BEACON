@@ -1,4 +1,5 @@
 import 'package:beacon/presentation/widgets/NavigationBarBottom.dart';
+import 'package:beacon/presentation/widgets/AppBarTop.dart';
 import 'package:flutter/material.dart';
 
 class ResourcesPage extends StatefulWidget {
@@ -15,10 +16,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: Text("Emergency Resources", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-      ),
+      appBar: AppBarTop(title:"Profile"),
       body: Column(
         children: [
           Container(

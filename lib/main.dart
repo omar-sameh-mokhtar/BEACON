@@ -2,6 +2,9 @@ import 'package:beacon/presentation/pages/chat.dart';
 import 'package:beacon/presentation/pages/dashboard.dart';
 import 'package:beacon/presentation/pages/resources.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'presentation/pages/profile.dart';
 import 'presentation/pages/landing_page.dart';
@@ -55,24 +58,56 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      routerConfig: _router,
-      debugShowCheckedModeBanner: false,
-      title: 'BEACON',
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: Colors.black,
-        primaryColor: Colors.red,
-        colorScheme: ColorScheme.dark(
-          primary: Colors.red,
-          secondary: Colors.redAccent,
+    return ChangeNotifierProvider(
+      create: (context) => MyAppState(),
+      child: MaterialApp.router(
+        routerConfig: _router,
+        debugShowCheckedModeBanner: false,
+        title: 'BEACON',
+        theme: ThemeData(
+          brightness: Brightness.dark,
+          scaffoldBackgroundColor: Colors.black,
+          primaryColor: Colors.red,
+          colorScheme: ColorScheme.dark(
+            primary: Colors.red,
+            secondary: Colors.redAccent,
+          ),
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,
+            elevation: 0,
+          ),
         ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.black,
-          foregroundColor: Colors.white,
-          elevation: 0,
-        ),
-      ),
+      )
     );
   }
 }
+
+class MyAppState extends ChangeNotifier {
+  
+  ThemeMode _themeMode = ThemeMode.dark;
+
+  ThemeMode get themeMode => _themeMode;
+  bool get isDarkMode => _themeMode == ThemeMode.dark;
+
+  MyAppState() {
+    _loadTheme();
+  }
+
+  Future<void> _loadTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isDark = prefs.getBool('isDarkMode') ?? true;
+    _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+    notifyListeners(); 
+    print(isDark);
+  }
+
+  Future<void> toggleTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isDark = _themeMode == ThemeMode.dark;
+    _themeMode = isDark ? ThemeMode.light : ThemeMode.dark;
+    await prefs.setBool('isDarkMode', _themeMode == ThemeMode.dark);
+    notifyListeners(); 
+  }
+}
+

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart'; // ✅ Import go_router
+import 'package:go_router/go_router.dart'; 
 
 class NavigationBarBottom extends StatelessWidget {
   const NavigationBarBottom({super.key, required this.currentIndex});
-  final int currentIndex; // ✅ To highlight the current tab
+  final int currentIndex; 
 
   @override
   Widget build(BuildContext context) {

@@ -1,3 +1,4 @@
+import 'package:beacon/presentation/widgets/AppBarTop.dart';
 import 'package:beacon/presentation/widgets/FloatingVoiceButton.dart';
 import 'package:beacon/presentation/widgets/NavigationBarBottom.dart';
 import 'package:flutter/material.dart';
@@ -21,25 +22,7 @@ class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        title: Text("Network Dashboard",
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.dark_mode,// : Icons.light_mode,
-              color:  Colors.yellow,// : Colors.black,
-            ),
-            onPressed: () {
-              //themeProvider.toggleTheme();
-            },
-          ),
-          Icon(Icons.settings, color: Colors.white),
-          SizedBox(width: 10),
-        ],
-      ),
+      appBar: AppBarTop(title:"Network Dashboard"),
       body: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
