@@ -1,3 +1,4 @@
+import 'package:beacon/presentation/widgets/NavigationBarBottom.dart';
 import 'package:flutter/material.dart';
 
 class ResourcesPage extends StatefulWidget {
@@ -36,16 +37,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
         backgroundColor: Colors.red, onPressed: () {},
         child: Icon(Icons.mic, color: Colors.white),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
-        selectedItemColor: Colors.red, unselectedItemColor: Colors.white70,
-        currentIndex: 2,
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Network"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-          BottomNavigationBarItem(icon: Icon(Icons.book), label: "Resources"),
-        ],
-      ),
+      bottomNavigationBar: NavigationBarBottom(currentIndex: 2,)
     );
   }
 

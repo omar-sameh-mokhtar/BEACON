@@ -1,3 +1,5 @@
+import 'package:beacon/presentation/widgets/FloatingVoiceButton.dart';
+import 'package:beacon/presentation/widgets/NavigationBarBottom.dart';
 import 'package:flutter/material.dart';
 
 class NetworkDashboardPage extends StatefulWidget {
@@ -25,6 +27,15 @@ class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
         title: Text("Network Dashboard",
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         actions: [
+          IconButton(
+            icon: Icon(
+              Icons.dark_mode,// : Icons.light_mode,
+              color:  Colors.yellow,// : Colors.black,
+            ),
+            onPressed: () {
+              //themeProvider.toggleTheme();
+            },
+          ),
           Icon(Icons.settings, color: Colors.white),
           SizedBox(width: 10),
         ],
@@ -114,22 +125,8 @@ class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.red,
-        onPressed: () {},
-        child: Icon(Icons.mic, color: Colors.white),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
-        selectedItemColor: Colors.red,
-        unselectedItemColor: Colors.white70,
-        currentIndex: 0,
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Network"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-          BottomNavigationBarItem(icon: Icon(Icons.book), label: "Resources"),
-        ],
-      ),
+      floatingActionButton: Floatingvoicebutton(),
+      bottomNavigationBar: NavigationBarBottom(currentIndex: 0)
     );
   }
 }
