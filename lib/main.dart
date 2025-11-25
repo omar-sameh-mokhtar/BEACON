@@ -99,7 +99,7 @@ class MyAppState extends ChangeNotifier {
     final isDark = prefs.getBool('isDarkMode') ?? true;
     _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
     notifyListeners(); 
-    print(isDark);
+    //print(isDark);
   }
 
   Future<void> toggleTheme() async {
