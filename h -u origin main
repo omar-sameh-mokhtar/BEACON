@@ -1,0 +1,102 @@
+[33m1696ab6[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m fixed errors in edit resource page
+[33m33ec7c4[m[33m ([m[1;33mtag: [m[1;33mFinal-Delivery[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m fix minor ui change
+[33m13450b6[m remove id from notifications
+[33mcc1a0b6[m README.txt
+[33m42d1755[m script test
+[33md184fa0[m Minor UI fixes
+[33m90fd85d[m remove unneeded code
+[33mb873d84[m  integration test
+[33m16352af[m merge resource
+[33m5947927[m test all passed
+[33mc1eb0d9[m merge
+[33ma02e9c1[m chat tts and sr
+[33maf424d6[m fixed_request
+[33m9c5bdf8[m Merge branch 'main' of https://github.com/omar-sameh-mokhtar/BEACON merged_v11
+[33m9559179[m fix_request
+[33m1742767[m merge
+[33m5d05983[m Fix in multidevice message handling
+[33mbb24178[m fix_requet
+[33m6824562[m Merge branch 'main' of https://github.com/omar-sameh-mokhtar/BEACON merged_v
+[33m81feef1[m request_notify
+[33m74f21ef[m make the app portrait
+[33m726464e[m downgrade permission_handler version
+[33md51aded[m merge
+[33mc13f0c7[m fix permission handling for older phones
+[33m37c9015[m delete_SYNC
+[33ma8994ec[m add&edit_SYNC
+[33m9cb604c[m merge
+[33mc614809[m fix resource with p2p
+[33ma98ee61[m broadcast_button
+[33m8263667[m Merge branch 'main' of https://github.com/omar-sameh-mokhtar/BEACON merge_sync
+[33m7c9901a[m Resources_SYNC
+[33m2e5df25[m merge
+[33m6b6b5de[m merge
+[33meee64fe[m Merge branch 'main' of https://github.com/omar-sameh-mokhtar/BEACON
+[33md77af56[m full widget and unit testing
+[33m823b1f3[m merge
+[33m248b3f4[m seperate direct messaging, last seen/msg
+[33mace91eb[m merged
+[33mdca0683[m resources_msgs
+[33m2e4677c[m merge
+[33m49fca16[m Add: Handshake, p2p and database integeration, fix message bug
+[33mf928539[m testing navigation from dashboard
+[33me66b615[m merge conflicts
+[33mffe0613[m client join notification, diconnection, fix mvvm
+[33ma6d803c[m request_resource
+[33m7d183ca[m profile
+[33md6317df[m profile_viewmodel
+[33m0ffb948[m tts
+[33mc22a014[m samml edit
+[33mddb5b43[m logic of voice
+[33m6c246a3[m resolved
+[33mbfbd107[m voice commands in resources and profile
+[33me0d0fd6[m resources_viewmodel
+[33ma9c5400[m fix voice bug tany
+[33mcacd1fe[m Fix navigation and voice bugs
+[33m00fbc38[m unit test
+[33m11fcd37[m voice commands test
+[33ma2f0335[m test voice commands
+[33m828e8a5[m  start testing
+[33m3b164f8[m Button keys
+[33m1fbffa1[m solve error of android old versions
+[33mdb89e68[m  Add: Notifications, p2p, MVVM
+[33m9a7ef9c[m Add: TTS and SR
+[33mf711451[m init_guard
+[33m345c58b[m p2p_discovery
+[33m29983c8[m device_mapper
+[33md1be734[m p2p_service
+[33mab7177f[m merged
+[33m0f1bb0c[m resources&profile
+[33m254e39e[m fix_profile,device_info
+[33mb49aa46[m fix_resource_add/edit
+[33m5c37ad3[m resource_service
+[33m87e1bdc[m resource_model
+[33m355279e[m resources
+[33m25c32a9[m fix AndroidManifest.xml
+[33mddb3725[m sync with remote repo
+[33m466437d[m[33m ([m[1;33mtag: [m[1;33mMS2[m[33m)[m Add: Initial database integration with encryption
+[33m064ad97[m[33m ([m[1;33mtag: [m[1;33mMS2.1[m[33m)[m Shared Preferences for theme with provider
+[33m16fc016[m Add navigation use go router
+[33m7351129[m Landing page and app logo
+[33md1d3dd9[m[33m ([m[1;33mtag: [m[1;33mMS1[m[33m)[m Landing page and app logo
+[33m6940f6b[m Merge remote main branch into local main
+[33mc5f1ee6[m constructed profile page layout
+[33mfa8e525[m Merge branch 'main' of https://github.com/omar-sameh-mokhtar/BEACON ay_merge
+[33m9f00e59[m chat_messages
+[33me4e8397[m 0x21
+[33m6293288[m fixed_padd
+[33m21a7810[m added_chattextbox
+[33mc40dda9[m fixed_words
+[33m76cfa4f[m fixed_responsive
+[33m6c911ae[m initdesign
+[33m4065477[m UI Layout for the Resources page
+[33m80313f3[m full newtork page
+[33m97ceef1[m network dashboard
+[33md500f94[m baisc scaffold
+[33m14a3f18[m create network page
+[33m9bba5a4[m Delete LICENSE
+[33mcbbcd04[m project setup and layout
+[33mb2780f5[m Delete README.md
+[33mbe28b63[m Delete .gitignore
+[33m32891b6[m Create .gitignore
+[33m3b799a9[m Initial commit

@@ -42,9 +42,9 @@ class ChattingPageState extends State<ChattingPage> {
     final voiceVm = context.watch<VoiceViewModel>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1E1E1E),
+      backgroundColor: const Color(0xFF1E1E1F),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: const Color(0xFF1E1E1F),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {

@@ -20,9 +20,9 @@ class AddOrEditResourcePage extends StatefulWidget {
 }
 
 class _AddOrEditResourcePageState extends State<AddOrEditResourcePage> {
-  final _formKey = GlobalKey<FormState>();
-  final _quantityController = TextEditingController();
-  final _noteController = TextEditingController();
+  final _form_Key = GlobalKey<FormState>();
+  final _quantity_Controller = TextEditingController();
+  final _note_Controller = TextEditingController();
 
   late String _selectedType;
   bool get _isEditing => widget.resource != null;
