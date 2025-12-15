@@ -2,61 +2,58 @@ import 'package:beacon/model/db.helper.dart';
 import 'package:beacon/model/data/ResourceRequest.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
-class ResourceRequestDao {
-  final db = DatabaseHelper.instance;
 
-  Future<int> insertResourceRequest(ResourceRequest request) async {
-    final database = await db.database;
-    return await database.insert(
-      'resource_requests',
-      request.toMap(),
+class ResourceDao {
+  final _db = DatabaseHelper.instance;
+
+
+  Future<void> addResource(Resource resource) async {
+    final db = await _db.database;
+    await db.insert(
+      'resources',
+      resource.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
-  Future<List<ResourceRequest>> getAll() async {
-    final database = await db.database;
-    final List<Map<String, Object?>> result =
-        await database.query('resource_requests');
-
-    return [
-      for (final {
-        'id': id as int,
-        'resource_type': resourceType as String,
-        'quantity': quantity as int,
-        'note': note as String,
-        'requester_id': requesterId as String,
-        'status': status as String,
-        'timestamp': timestamp as String
-      } in result)
-        ResourceRequest(
-          id: id,
-          resourceType: resourceType,
-          quantity: quantity,
-          note: note,
-          requesterId: requesterId,
-          status: status,
-          timestamp: timestamp,
-        )
-    ];
+  Future<List<Resource>> getAllResources() async {
+    final db = await _db.database;
+    final result = await db.query('resources');
+    return result.map(Resource.fromMap).toList();
   }
 
-  Future<void> updateResourceRequest(ResourceRequest request) async {
-    final database = await db.database;
-    await database.update(
-      'resource_requests',
-      request.toMap(),
+
+  Future<void> updateResource(Resource resource) async {
+    final db = await _db.database;
+    await db.update(
+      'resources',
+      resource.toMap(),
       where: 'id = ?',
-      whereArgs: [request.id],
+      whereArgs: [resource.id],
     );
   }
 
-  Future<void> deleteResourceRequest(int id) async {
-    final database = await db.database;
-    await database.delete(
-      'resource_requests',
+  Future<void> requestResource(Resource resource) async {
+    final db = await _db.database;
+    await db.update(
+      'resources',
+      {
+        'status': 'requested',
+        'is_requested': 1,
+        'timestamp': DateTime.now().toIso8601String(),
+      },
+      where: 'id = ?',
+      whereArgs: [resource.id],
+    );
+  }
+
+  Future<void> deleteResource(int id) async {
+    final db = await _db.database;
+    await db.delete(
+      'resources',
       where: 'id = ?',
       whereArgs: [id],
     );
   }
 }
+
