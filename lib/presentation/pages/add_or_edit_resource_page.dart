@@ -25,11 +25,18 @@ class _AddOrEditResourcePageState extends State<AddOrEditResourcePage> {
   final _resourceDao = ResourceDao();
   final _userProfileDao = UserProfileDao();
 
+  late String _selectedType;
+
   bool get _isEditing => widget.resource != null;
+
+  final List<String> _types = ['Medical', 'Shelter', 'Food'];
 
   @override
   void initState() {
     super.initState();
+
+    _selectedType = widget.resource?.resourceType ?? widget.resourceType;
+
     if (_isEditing) {
       _quantityController.text =
           widget.resource!.quantity.toString();
@@ -45,12 +52,37 @@ class _AddOrEditResourcePageState extends State<AddOrEditResourcePage> {
         title: Text(_isEditing ? 'Edit Resource' : 'Add Resource'),
         backgroundColor: Colors.grey[900],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+
+              DropdownButtonFormField<String>(
+                value: _selectedType,
+                items: _types
+                    .map(
+                      (type) => DropdownMenuItem(
+                    value: type,
+                    child: Text(type),
+                  ),
+                )
+                    .toList(),
+                onChanged: _isEditing
+                    ? null
+                    : (value) => setState(() => _selectedType = value!),
+                decoration: const InputDecoration(
+                  labelText: 'Resource Type',
+                  border: OutlineInputBorder(),
+                ),
+                style: const TextStyle(color: Colors.white),
+                dropdownColor: Colors.grey[900],
+              ),
+
+              const SizedBox(height: 16),
+
               TextFormField(
                 controller: _quantityController,
                 keyboardType: TextInputType.number,
@@ -58,7 +90,6 @@ class _AddOrEditResourcePageState extends State<AddOrEditResourcePage> {
                 decoration: const InputDecoration(
                   labelText: 'Quantity',
                   border: OutlineInputBorder(),
-                  labelStyle: TextStyle(color: Colors.white70),
                 ),
                 validator: (v) {
                   if (v == null || v.isEmpty) {
@@ -70,27 +101,34 @@ class _AddOrEditResourcePageState extends State<AddOrEditResourcePage> {
                   return null;
                 },
               ),
+
               const SizedBox(height: 16),
+
               TextFormField(
                 controller: _noteController,
+                maxLines: 3,
                 style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
                   labelText: 'Note',
                   border: OutlineInputBorder(),
-                  labelStyle: TextStyle(color: Colors.white70),
                 ),
                 validator: (v) =>
                 v == null || v.isEmpty ? 'Enter note' : null,
               ),
+
               const SizedBox(height: 32),
+
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 50, vertical: 14),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 50, vertical: 14),
+                  textStyle: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 onPressed: _saveResource,
-                child: const Text('Save'),
+                child: Text(_isEditing ? 'Update Resource' : 'Save Resource'),
               ),
             ],
           ),
@@ -103,18 +141,17 @@ class _AddOrEditResourcePageState extends State<AddOrEditResourcePage> {
     if (!_formKey.currentState!.validate()) return;
 
     final user = await _userProfileDao.getUserProfile();
-    if (user == null) return;
 
     if (_isEditing) {
       final updated = Resource(
         id: widget.resource!.id,
-        resourceType: widget.resourceType,
+        resourceType: _selectedType,
         quantity: int.parse(_quantityController.text),
         note: _noteController.text,
-        requesterId: widget.resource!.requesterId,
-        status: widget.resource!.status,
+        requesterId: "",
+        status: 'available',
         timestamp: DateTime.now().toIso8601String(),
-        owner: "me",
+        owner: user?.name ?? "Me",
         isRequested: false,
         isMine: true,
       );
@@ -123,18 +160,17 @@ class _AddOrEditResourcePageState extends State<AddOrEditResourcePage> {
     } else {
       final all = await _resourceDao.getAllResources();
       final newId =
-          (all.isNotEmpty ? all.map((e) => e.id).reduce((a, b) => a > b ? a : b) : 0) +
-              1;
+          (all.isNotEmpty ? all.map((e) => e.id).reduce((a, b) => a > b ? a : b) : 0) + 1;
 
       final resource = Resource(
         id: newId,
-        resourceType: widget.resourceType,
+        resourceType: _selectedType,
         quantity: int.parse(_quantityController.text),
         note: _noteController.text,
-        requesterId: user.deviceId,
+        requesterId: "",
         status: 'available',
         timestamp: DateTime.now().toIso8601String(),
-        owner: "me",
+        owner: user?.name ?? "Me",
         isRequested: false,
         isMine: true,
       );

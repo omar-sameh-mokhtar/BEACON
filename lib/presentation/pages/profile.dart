@@ -1,6 +1,10 @@
-import 'package:beacon/presentation/widgets/NavigationBarBottom.dart';
-import 'package:beacon/presentation/widgets/AppBarTop.dart';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:beacon/model/data/UserProfile.dart';
+import 'package:beacon/model/service/user_profile_service.dart';
+
+import '../../model/Device.helper.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -10,210 +14,172 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  final _dao = UserProfileDao();
+
+  final nameController = TextEditingController();
+  final phoneController = TextEditingController();
+  String bloodType = 'A+';
+
   bool isEditing = false;
+  UserProfile? profile;
 
-  final TextEditingController nameController =
-  TextEditingController(text: "Abdalrahman Khaled");
-  final TextEditingController phoneController =
-  TextEditingController(text: "+201111732529");
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
 
-  final String deviceId = "BEA-001";
+  Future<void> _loadProfile() async {
+    final existing = await _dao.getUserProfile();
 
-  final List<Map<String, String>> contacts = [
-    {"name": "Omar", "id": "BEA-010"},
-    {"name": "Eslam", "id": "BEA-011"},
-    {"name": "Youssef", "id": "BEA-023"},
-  ];
+    if (existing != null) {
+      profile = existing;
+      nameController.text = existing.name;
+      phoneController.text = existing.phone;
+      bloodType = existing.bloodType;
+    } else {
+      final deviceId = await DeviceIdHelper.getDeviceId();
+      final now = DateTime.now().toIso8601String();
+
+      profile = UserProfile(
+        id: 1,
+        deviceId: deviceId,
+        name: '',
+        phone: '',
+        bloodType: 'A+',
+        createdAt: now,
+        updatedAt: now,
+        imagePath: '',
+      );
+
+      await _dao.insertUserProfile(profile!);
+    }
+
+    setState(() {});
+  }
+
+  Future<void> _save() async {
+    if (profile == null) return;
+
+    final updated = UserProfile(
+      id: profile!.id,
+      deviceId: profile!.deviceId,
+      name: nameController.text,
+      phone: phoneController.text,
+      bloodType: bloodType,
+      imagePath: profile!.imagePath,
+      createdAt: profile!.createdAt,
+      updatedAt: DateTime.now().toIso8601String(),
+    );
+
+    await _dao.updateUserProfile(updated);
+    setState(() {
+      isEditing = false;
+      profile = updated;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBarTop(title:"Profile"),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // --- Profile Image ---
-            Center(
-              child: Column(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(80),
-                    child: Image(
-                      image : AssetImage("assets/pp.png"),
-                      height: 120,
-                      width: 120,
-                      fit: BoxFit.cover,
+    if (profile == null) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isTablet = constraints.maxWidth > 600;
+
+        return Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(title: const Text('Profile')),
+          body: Center(
+            child: SizedBox(
+              width: isTablet ? 500 : double.infinity,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    CircleAvatar(
+                      radius: 60,
+                      backgroundImage: profile!.imagePath.isEmpty
+                          ? const AssetImage('assets/pp.png')
+                          : FileImage(File(profile!.imagePath))
+                      as ImageProvider,
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 8, horizontal: 16),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Device ID: ${profile!.deviceId}',
+                      style: const TextStyle(color: Colors.white70),
                     ),
-                    onPressed: () {
-                      // Edit photo functionality later
-                    },
-                    child: const Text(
-                      "Edit Photo",
-                      style: TextStyle(color: Colors.white),
+                    const SizedBox(height: 20),
+
+                    _field('Name', nameController),
+                    _field('Phone', phoneController),
+
+                    DropdownButtonFormField<String>(
+                      value: bloodType,
+                      dropdownColor: Colors.grey[900],
+                      items: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
+                          .map(
+                            (e) => DropdownMenuItem(
+                          value: e,
+                          child: Text(e,
+                              style:
+                              const TextStyle(color: Colors.white)),
+                        ),
+                      )
+                          .toList(),
+                      onChanged:
+                      isEditing ? (v) => setState(() => bloodType = v!) : null,
+                      decoration: _decoration('Blood Type'),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "Device ID: BEA-001",
-                    style: const TextStyle(
-                        color: Colors.white70, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
 
-            const SizedBox(height: 25),
+                    const SizedBox(height: 20),
 
-            // --- Profile Fields ---
-            _buildField("Name", nameController),
-            _buildField("Phone Number", phoneController),
-
-            const SizedBox(height: 20),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                onPressed: () {
-                  setState(() {
-                    isEditing = !isEditing;
-                  });
-                },
-                child: Text(
-                  isEditing ? "Save Changes" : "Update",
-                  style: const TextStyle(color: Colors.white),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: isEditing
+                            ? _save
+                            : () => setState(() => isEditing = true),
+                        child: Text(isEditing ? 'Save' : 'Edit'),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-
-            const SizedBox(height: 25),
-
-            // --- Contacts Header + Add Button ---
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  "Contacts",
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    padding:
-                    const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                  ),
-                  onPressed: () {
-                    // Add contact functionality later
-                  },
-                  child: const Text(
-                    "Add Contact",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 10),
-
-            // --- Contacts List ---
-            Expanded(
-              child: ListView.builder(
-                itemCount: contacts.length,
-                itemBuilder: (context, i) {
-                  final contact = contacts[i];
-                  return Container(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[900],
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: ListTile(
-                      title: Text(
-                        contact["name"]!,
-                        style: const TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        "ID: ${contact["id"]}",
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            onPressed: () {
-                              // Edit functionality later
-                            },
-                            icon: const Icon(Icons.edit, color: Colors.white),
-                          ),
-                          IconButton(
-                            onPressed: () {
-                              // Remove functionality later
-                            },
-                            icon:
-                            const Icon(Icons.delete, color: Colors.redAccent),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: NavigationBarBottom(currentIndex: 1,)
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildField(String label, TextEditingController controller) {
+  Widget _field(String label, TextEditingController c) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: TextField(
-        controller: controller,
+        controller: c,
         enabled: isEditing,
         style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: const TextStyle(color: Colors.white70),
-          disabledBorder: OutlineInputBorder(
-            borderSide: const BorderSide(color: Colors.grey),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderSide: const BorderSide(color: Colors.red),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: const BorderSide(color: Colors.red, width: 2),
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
+        decoration: _decoration(label),
       ),
+    );
+  }
+
+  InputDecoration _decoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: Colors.white70),
+      enabledBorder:
+      OutlineInputBorder(borderSide: const BorderSide(color: Colors.red)),
+      disabledBorder:
+      OutlineInputBorder(borderSide: const BorderSide(color: Colors.grey)),
+      focusedBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: Colors.red, width: 2)),
     );
   }
 }

@@ -76,7 +76,6 @@ class _ResourcesPageState extends State<ResourcesPage> {
     );
   }
 
-  // ================= Tabs =================
 
   Widget _buildTabs() {
     return Container(
@@ -132,7 +131,6 @@ class _ResourcesPageState extends State<ResourcesPage> {
     }
   }
 
-  // ================= Content =================
 
   Widget _buildContent() {
     if (_resourcesFuture == null) {
@@ -179,7 +177,6 @@ class _ResourcesPageState extends State<ResourcesPage> {
     );
   }
 
-  // ================= Card =================
 
   Widget _buildResourceCard(Resource item, bool isMine) {
     return Container(
@@ -239,7 +236,6 @@ class _ResourcesPageState extends State<ResourcesPage> {
     );
   }
 
-  // ================= Menu =================
 
   Widget _buildMenu(Resource item) {
     return PopupMenuButton<String>(

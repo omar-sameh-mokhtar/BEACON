@@ -90,8 +90,8 @@ class DatabaseHelper {
         status TEXT,
         timestamp TEXT,
         owner TEXT,
-        is_requested BOOLEAN,
-        is_mine BOOLEAN
+        is_requested INTEGER,
+        is_mine INTEGER
       )
     ''');
   }
