@@ -1,6 +1,10 @@
-import 'package:beacon/presentation/widgets/NavigationBarBottom.dart';
-import 'package:beacon/presentation/widgets/AppBarTop.dart';
 import 'package:flutter/material.dart';
+import 'package:beacon/model/data/ResourceRequest.dart';
+import 'package:beacon/model/service/resource_request_service.dart';
+import 'package:beacon/model/service/user_profile_service.dart';
+import 'package:beacon/presentation/pages/add_or_edit_resource_page.dart';
+import 'package:beacon/presentation/widgets/AppBarTop.dart';
+import 'package:beacon/presentation/widgets/NavigationBarBottom.dart';
 
 class ResourcesPage extends StatefulWidget {
   const ResourcesPage({super.key});
@@ -12,110 +16,263 @@ class ResourcesPage extends StatefulWidget {
 class _ResourcesPageState extends State<ResourcesPage> {
   int _currentTab = 0;
 
+  final ResourceRequestDao _resourceDao = ResourceRequestDao();
+  final UserProfileDao _userProfileDao = UserProfileDao();
+
+  String? _currentUserId;
+  Future<List<ResourceRequest>>? _resourcesFuture;
+
+  final List<String> _tabs = ['Medical', 'Shelter', 'Food'];
+
+  @override
+  void initState() {
+    super.initState();
+    _initPage();
+  }
+
+  Future<void> _initPage() async {
+    try {
+      final profile = await _userProfileDao.getUserProfile();
+      if (profile == null) {
+        throw Exception('User profile not found');
+      }
+
+      setState(() {
+        _currentUserId = profile.deviceId;
+        _resourcesFuture = _resourceDao.getAll();
+      });
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
+  void _refresh() {
+    setState(() {
+      _resourcesFuture = _resourceDao.getAll();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBarTop(title:"Profile"),
+      appBar: AppBarTop(title: "Resources"),
+      bottomNavigationBar: const NavigationBarBottom(currentIndex: 2),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.red,
+        child: const Icon(Icons.add),
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => AddOrEditResourcePage(
+                resourceType: _tabs[_currentTab],
+              ),
+            ),
+          );
+          if (result == true) _refresh();
+        },
+      ),
       body: Column(
         children: [
-          Container(
-            color: Colors.grey[900],
-            child: Row(children: [
-              _buildTab("Medical", Icons.medical_services, 0),
-              _buildTab("Shelter", Icons.home, 1),
-              _buildTab("Food", Icons.fastfood, 2),
-            ]),
-          ),
-
+          _buildTabs(),
           Expanded(child: _buildContent()),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.red, onPressed: () {},
-        child: Icon(Icons.mic, color: Colors.white),
-      ),
-      bottomNavigationBar: NavigationBarBottom(currentIndex: 2,)
     );
   }
 
-  Widget _buildTab(String name, IconData icon, int index) {
-    bool isSelected = _currentTab == index;
-    return Expanded(
-      child: Container(
-        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isSelected ? Colors.red : Colors.grey, width: 2))),
-        child: TextButton(
-          onPressed: () => setState(() => _currentTab = index),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(icon, color: isSelected ? Colors.red : Colors.white70, size: 20),
-            SizedBox(height: 4),
-            Text(name, style: TextStyle(color: isSelected ? Colors.red : Colors.white70, fontSize: 12)),
-          ]),
-        ),
+  // ================= Tabs =================
+
+  Widget _buildTabs() {
+    return Container(
+      color: Colors.grey[900],
+      child: Row(
+        children: List.generate(_tabs.length, (index) {
+          final isSelected = _currentTab == index;
+          return Expanded(
+            child: InkWell(
+              onTap: () => setState(() => _currentTab = index),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: isSelected ? Colors.red : Colors.grey,
+                      width: 2,
+                    ),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      _getTabIcon(index),
+                      color: isSelected ? Colors.red : Colors.white70,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _tabs[index],
+                      style: TextStyle(
+                        color: isSelected ? Colors.red : Colors.white70,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }),
       ),
     );
   }
+
+  IconData _getTabIcon(int index) {
+    switch (index) {
+      case 0:
+        return Icons.medical_services;
+      case 1:
+        return Icons.home;
+      default:
+        return Icons.fastfood;
+    }
+  }
+
+  // ================= Content =================
 
   Widget _buildContent() {
-    List<Map<String, String>> items = _currentTab == 0 ? [
-      {"title": "Need First Aid Kit", "type": "Request", "user": "User Alpha", "distance": "0.5 km"},
-      {"title": "Medical Supplies", "type": "Offer", "user": "User Beta", "distance": "1.2 km"},
-    ] : _currentTab == 1 ? [
-      {"title": "Emergency Shelter", "type": "Offer", "user": "Safe House", "distance": "1.5 km"},
-      {"title": "Need Shelter", "type": "Request", "user": "Family Group", "distance": "2.1 km"},
-    ] : [
-      {"title": "Purified Water", "type": "Offer", "user": "Community Center", "distance": "0.7 km"},
-      {"title": "Need Food Supplies", "type": "Request", "user": "Stranded Group", "distance": "3.2 km"},
-    ];
+    return FutureBuilder<List<ResourceRequest>>(
+      future: _resourcesFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    return Padding(
-      padding: EdgeInsets.all(16),
-      child: Column(children: [
-        Row(children: [
-          Text("Available Resources", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-          Spacer(),
-          IconButton(icon: Icon(Icons.add, color: Colors.red), onPressed: () {}),
-        ]),
-        SizedBox(height: 16),
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              snapshot.error.toString(),
+              style: const TextStyle(color: Colors.white),
+            ),
+          );
+        }
 
-        Expanded(
-          child: ListView.builder(
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              var item = items[index];
-              bool isRequest = item["type"] == "Request";
-              return Container(
-                margin: EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(color: Colors.grey[900], borderRadius: BorderRadius.circular(12)),
-                child: ListTile(
-                  contentPadding: EdgeInsets.all(16),
-                  leading: Container(
-                    width: 40, height: 40,
-                    decoration: BoxDecoration(
-                      color: isRequest ? Colors.orange.withOpacity(0.2) : Colors.green.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20), border: Border.all(color: isRequest ? Colors.orange : Colors.green),
-                    ),
-                    child: Icon(isRequest ? Icons.help_outline : Icons.volunteer_activism, color: isRequest ? Colors.orange : Colors.green, size: 20),
-                  ),
-                  title: Text(item["title"]!, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  subtitle: Padding(padding: EdgeInsets.only(top: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Container(padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(
-                        color: isRequest ? Colors.orange.withOpacity(0.1) : Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
-                      child: Text(item["type"]!, style: TextStyle(color: isRequest ? Colors.orange : Colors.green, fontSize: 12, fontWeight: FontWeight.bold)),
-                    ),
-                    SizedBox(height: 8),
-                    Row(children: [
-                      Icon(Icons.person_outline, color: Colors.grey, size: 14), SizedBox(width: 4), Text(item["user"]!, style: TextStyle(color: Colors.grey, fontSize: 12)),
-                      SizedBox(width: 16), Icon(Icons.location_on_outlined, color: Colors.grey, size: 14), SizedBox(width: 4), Text(item["distance"]!, style: TextStyle(color: Colors.grey, fontSize: 12)),
-                    ]),
-                  ])),
+        final allResources = snapshot.data ?? [];
 
-                ),
-              );
-            },
-          ),
+        final filtered = allResources
+            .where((e) => e.resourceType == _tabs[_currentTab])
+            .toList();
+
+        if (filtered.isEmpty) {
+          return const Center(
+            child: Text(
+              'No resources found',
+              style: TextStyle(color: Colors.white70),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: filtered.length,
+          itemBuilder: (_, index) {
+            final item = filtered[index];
+            final isMine = item.requesterId == _currentUserId;
+            return _buildResourceCard(item, isMine);
+          },
+        );
+      },
+    );
+  }
+
+  // ================= Card =================
+
+  Widget _buildResourceCard(ResourceRequest item, bool isMine) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isMine ? Colors.blue : Colors.green,
         ),
-      ]),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isMine ? Icons.person : Icons.volunteer_activism,
+                color: isMine ? Colors.blue : Colors.green,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                isMine ? 'My Request' : 'Request from others',
+                style: TextStyle(
+                  color: isMine ? Colors.blue : Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Spacer(),
+              if (isMine) _buildMenu(item),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            item.note,
+            style: const TextStyle(color: Colors.white, fontSize: 16),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Quantity: ${item.quantity}',
+            style: const TextStyle(color: Colors.white70),
+          ),
+          const SizedBox(height: 12),
+          if (!isMine)
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+              ),
+              onPressed: () {
+                // fulfill / request logic later
+              },
+              child: const Text('Request Resource'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // ================= Menu =================
+
+  Widget _buildMenu(ResourceRequest item) {
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.more_vert, color: Colors.white),
+      onSelected: (value) async {
+        if (value == 'edit') {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => AddOrEditResourcePage(
+                resourceType: item.resourceType,
+                resourceRequest: item,
+              ),
+            ),
+          );
+          if (result == true) _refresh();
+        }
+
+        if (value == 'delete') {
+          await _resourceDao.deleteResourceRequest(item.id);
+          _refresh();
+        }
+      },
+      itemBuilder: (_) => const [
+        PopupMenuItem(value: 'edit', child: Text('Edit')),
+        PopupMenuItem(value: 'delete', child: Text('Delete')),
+      ],
     );
   }
 }

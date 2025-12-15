@@ -51,10 +51,6 @@ class DatabaseHelper {
         name TEXT,
         phone TEXT,
         blood_type TEXT,
-        '''
-        //emergency_contact_name TEXT,
-        //emergency_contact_phone TEXT,
-        '''
         created_at TEXT,
         updated_at TEXT,
         image_path TEXT
@@ -80,19 +76,22 @@ class DatabaseHelper {
         message_type TEXT,
         content TEXT,
         timestamp TEXT,
-        delivered INTEGER,
+        delivered INTEGER
       )
     ''');
 
     await db.execute('''
-      CREATE TABLE resource_requests (
+      CREATE TABLE resources (
         id INTEGER PRIMARY KEY,
         resource_type TEXT,
         quantity INTEGER,
         note TEXT,
         requester_id TEXT,
         status TEXT,
-        timestamp TEXT
+        timestamp TEXT,
+        owner TEXT,
+        is_requested BOOLEAN,
+        is_mine BOOLEAN
       )
     ''');
   }

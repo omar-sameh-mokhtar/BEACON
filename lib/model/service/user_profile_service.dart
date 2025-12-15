@@ -14,6 +14,36 @@ class UserProfileDao {
     );
   }
 
+  Future<UserProfile?> getUserProfile() async {
+    final database = await db.database;
+    final List<Map<String, Object?>> result = await database.query('user_profile', limit: 1);
+
+    if (result.isNotEmpty) {
+        final
+        {
+        'id': id as int,
+        'device_id': deviceId as String,
+        'name': name as String,
+        'phone': phone as String,
+        'blood_type': bloodType as String,
+        'created_at': createdAt as String,
+        'updated_at': updatedAt as String,
+        'image_path': imagePath as String
+      } = result.first;
+      return UserProfile(
+          id: id,
+          deviceId: deviceId,
+          name: name,
+          phone: phone,
+          bloodType: bloodType,
+          imagePath: imagePath,
+          createdAt: createdAt,
+          updatedAt: updatedAt,
+        );
+    }
+    return null;
+  }
+
   Future<List<UserProfile>> getAll() async {
     final database = await db.database;
     final List<Map<String, Object?>> result =

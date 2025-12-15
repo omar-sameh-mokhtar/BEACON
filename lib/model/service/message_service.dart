@@ -3,7 +3,7 @@ import 'package:beacon/model/data/Message.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 
-class UserProfileDao {
+class MessageDao {
   final db = DatabaseHelper.instance;
 
   Future<int> insertMessage(Message message) async {
@@ -19,10 +19,11 @@ class UserProfileDao {
     final List<Map<String, Object?>> result = await database.query('messages');
 
     return [
-      for(final {'id': id as int, 'sender_device_id': senderDeviceId as String, 'content': content as String, 'timestamp': timestamp as String, 'delivered': delivered as int} in result)
+      for(final {'id': id as int, 'sender_device_id': senderDeviceId as String, 'message_type': messageType as String, 'content': content as String, 'timestamp': timestamp as String, 'delivered': delivered as int} in result)
         Message(
           id: id,
           senderDeviceId: senderDeviceId,
+          messageType: messageType,
           content: content,
           timestamp: timestamp,
           delivered: delivered,
