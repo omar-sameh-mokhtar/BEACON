@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:beacon/model/data/ResourceRequest.dart';
-import 'package:beacon/model/service/resource_request_service.dart';
+import 'package:beacon/model/data/Resource.dart';
+import 'package:beacon/model/service/resource_service.dart';
 import 'package:beacon/model/service/user_profile_service.dart';
 import 'package:beacon/presentation/pages/add_or_edit_resource_page.dart';
 import 'package:beacon/presentation/widgets/AppBarTop.dart';
@@ -16,11 +16,11 @@ class ResourcesPage extends StatefulWidget {
 class _ResourcesPageState extends State<ResourcesPage> {
   int _currentTab = 0;
 
-  final ResourceRequestDao _resourceDao = ResourceRequestDao();
+  final ResourceDao _resourceDao = ResourceDao();
   final UserProfileDao _userProfileDao = UserProfileDao();
 
   String? _currentUserId;
-  Future<List<ResourceRequest>>? _resourcesFuture;
+  Future<List<Resource>>? _resourcesFuture;
 
   final List<String> _tabs = ['Medical', 'Shelter', 'Food'];
 
@@ -31,24 +31,18 @@ class _ResourcesPageState extends State<ResourcesPage> {
   }
 
   Future<void> _initPage() async {
-    try {
-      final profile = await _userProfileDao.getUserProfile();
-      if (profile == null) {
-        throw Exception('User profile not found');
-      }
+    final profile = await _userProfileDao.getUserProfile();
+    if (profile == null) return;
 
-      setState(() {
-        _currentUserId = profile.deviceId;
-        _resourcesFuture = _resourceDao.getAll();
-      });
-    } catch (e) {
-      debugPrint(e.toString());
-    }
+    setState(() {
+      _currentUserId = profile.deviceId;
+      _resourcesFuture = _resourceDao.getAllResources();
+    });
   }
 
   void _refresh() {
     setState(() {
-      _resourcesFuture = _resourceDao.getAll();
+      _resourcesFuture = _resourceDao.getAllResources();
     });
   }
 
@@ -141,7 +135,11 @@ class _ResourcesPageState extends State<ResourcesPage> {
   // ================= Content =================
 
   Widget _buildContent() {
-    return FutureBuilder<List<ResourceRequest>>(
+    if (_resourcesFuture == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return FutureBuilder<List<Resource>>(
       future: _resourcesFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -150,25 +148,21 @@ class _ResourcesPageState extends State<ResourcesPage> {
 
         if (snapshot.hasError) {
           return Center(
-            child: Text(
-              snapshot.error.toString(),
-              style: const TextStyle(color: Colors.white),
-            ),
+            child: Text(snapshot.error.toString(),
+                style: const TextStyle(color: Colors.white)),
           );
         }
 
-        final allResources = snapshot.data ?? [];
+        final resources = snapshot.data ?? [];
 
-        final filtered = allResources
+        final filtered = resources
             .where((e) => e.resourceType == _tabs[_currentTab])
             .toList();
 
         if (filtered.isEmpty) {
           return const Center(
-            child: Text(
-              'No resources found',
-              style: TextStyle(color: Colors.white70),
-            ),
+            child: Text('No resources found',
+                style: TextStyle(color: Colors.white70)),
           );
         }
 
@@ -187,16 +181,14 @@ class _ResourcesPageState extends State<ResourcesPage> {
 
   // ================= Card =================
 
-  Widget _buildResourceCard(ResourceRequest item, bool isMine) {
+  Widget _buildResourceCard(Resource item, bool isMine) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isMine ? Colors.blue : Colors.green,
-        ),
+        border: Border.all(color: isMine ? Colors.blue : Colors.green),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,7 +201,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
               ),
               const SizedBox(width: 8),
               Text(
-                isMine ? 'My Request' : 'Request from others',
+                isMine ? 'My Resource' : 'Resource from others',
                 style: TextStyle(
                   color: isMine ? Colors.blue : Colors.green,
                   fontWeight: FontWeight.bold,
@@ -220,23 +212,25 @@ class _ResourcesPageState extends State<ResourcesPage> {
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            item.note,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Quantity: ${item.quantity}',
-            style: const TextStyle(color: Colors.white70),
-          ),
+          Text(item.note,
+              style: const TextStyle(color: Colors.white, fontSize: 16)),
+          const SizedBox(height: 6),
+          Text('Quantity: ${item.quantity}',
+              style: const TextStyle(color: Colors.white70)),
           const SizedBox(height: 12),
+
+          /// REQUEST BUTTON (for others)
           if (!isMine)
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
               ),
               onPressed: () {
-                // fulfill / request logic later
+                // TODO:
+                // request resource logic
+                // - update status
+                // - broadcast via BLE
+                // - notify owner
               },
               child: const Text('Request Resource'),
             ),
@@ -247,7 +241,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
 
   // ================= Menu =================
 
-  Widget _buildMenu(ResourceRequest item) {
+  Widget _buildMenu(Resource item) {
     return PopupMenuButton<String>(
       icon: const Icon(Icons.more_vert, color: Colors.white),
       onSelected: (value) async {
@@ -257,7 +251,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
             MaterialPageRoute(
               builder: (_) => AddOrEditResourcePage(
                 resourceType: item.resourceType,
-                resourceRequest: item,
+                resource: item,
               ),
             ),
           );
@@ -265,7 +259,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
         }
 
         if (value == 'delete') {
-          await _resourceDao.deleteResourceRequest(item.id);
+          await _resourceDao.deleteResource(item.id);
           _refresh();
         }
       },

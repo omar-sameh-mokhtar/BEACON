@@ -1,34 +1,39 @@
-import 'package:beacon/model/data/ResourceRequest.dart';
-import 'package:beacon/model/service/resource_request_service.dart';
-import 'package:beacon/model/service/user_profile_service.dart';
 import 'package:flutter/material.dart';
+import 'package:beacon/model/data/Resource.dart';
+import 'package:beacon/model/service/resource_service.dart';
+import 'package:beacon/model/service/user_profile_service.dart';
 
 class AddOrEditResourcePage extends StatefulWidget {
   final String resourceType;
-  final ResourceRequest? resourceRequest;
+  final Resource? resource;
 
-  const AddOrEditResourcePage(
-      {super.key, required this.resourceType, this.resourceRequest});
+  const AddOrEditResourcePage({
+    super.key,
+    required this.resourceType,
+    this.resource,
+  });
 
   @override
-  _AddOrEditResourcePageState createState() => _AddOrEditResourcePageState();
+  State<AddOrEditResourcePage> createState() => _AddOrEditResourcePageState();
 }
 
 class _AddOrEditResourcePageState extends State<AddOrEditResourcePage> {
   final _formKey = GlobalKey<FormState>();
   final _quantityController = TextEditingController();
   final _noteController = TextEditingController();
-  final _resourceRequestDao = ResourceRequestDao();
+
+  final _resourceDao = ResourceDao();
   final _userProfileDao = UserProfileDao();
 
-  bool get _isEditing => widget.resourceRequest != null;
+  bool get _isEditing => widget.resource != null;
 
   @override
   void initState() {
     super.initState();
     if (_isEditing) {
-      _quantityController.text = widget.resourceRequest!.quantity.toString();
-      _noteController.text = widget.resourceRequest!.note;
+      _quantityController.text =
+          widget.resource!.quantity.toString();
+      _noteController.text = widget.resource!.note;
     }
   }
 
@@ -37,58 +42,55 @@ class _AddOrEditResourcePageState extends State<AddOrEditResourcePage> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Request' : 'New Request'),
+        title: Text(_isEditing ? 'Edit Resource' : 'Add Resource'),
         backgroundColor: Colors.grey[900],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
               TextFormField(
                 controller: _quantityController,
-                decoration: InputDecoration(
-                  labelText: 'Quantity',
-                  labelStyle: TextStyle(color: Colors.white70),
-                  border: OutlineInputBorder(),
-                ),
                 keyboardType: TextInputType.number,
-                style: TextStyle(color: Colors.white),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a quantity';
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'Quantity',
+                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(color: Colors.white70),
+                ),
+                validator: (v) {
+                  if (v == null || v.isEmpty) {
+                    return 'Enter quantity';
                   }
-                  if (int.tryParse(value) == null) {
-                    return 'Please enter a valid number';
+                  if (int.tryParse(v) == null) {
+                    return 'Invalid number';
                   }
                   return null;
                 },
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _noteController,
-                decoration: InputDecoration(
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
                   labelText: 'Note',
-                  labelStyle: TextStyle(color: Colors.white70),
                   border: OutlineInputBorder(),
+                  labelStyle: TextStyle(color: Colors.white70),
                 ),
-                style: TextStyle(color: Colors.white),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a note';
-                  }
-                  return null;
-                },
+                validator: (v) =>
+                v == null || v.isEmpty ? 'Enter note' : null,
               ),
-              SizedBox(height: 32),
+              const SizedBox(height: 32),
               ElevatedButton(
-                onPressed: _saveResourceRequest,
-                child: Text('Save'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
-                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 50, vertical: 14),
                 ),
+                onPressed: _saveResource,
+                child: const Text('Save'),
               ),
             ],
           ),
@@ -97,45 +99,49 @@ class _AddOrEditResourcePageState extends State<AddOrEditResourcePage> {
     );
   }
 
-  Future<void> _saveResourceRequest() async {
-    if (_formKey.currentState!.validate()) {
-      final userProfile = await _userProfileDao.getUserProfile();
-      if (userProfile == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not identify user.')),
-        );
-        return;
-      }
+  Future<void> _saveResource() async {
+    if (!_formKey.currentState!.validate()) return;
 
-      if (_isEditing) {
-        final updatedRequest = ResourceRequest(
-          id: widget.resourceRequest!.id,
-          resourceType: widget.resourceType,
-          quantity: int.parse(_quantityController.text),
-          note: _noteController.text,
-          requesterId: widget.resourceRequest!.requesterId,
-          status: widget.resourceRequest!.status,
-          timestamp: DateTime.now().toIso8601String(),
-        );
-        await _resourceRequestDao.updateResourceRequest(updatedRequest);
-      } else {
-        // Creating a new id for the new request, assuming the db will auto-increment it if we pass a specific value or high value
-        // The logic for ID generation should be robust, here is a simple example
-        final allRequests = await _resourceRequestDao.getAll();
-        final newId = (allRequests.isNotEmpty ? allRequests.map((e) => e.id).reduce((a, b) => a > b ? a : b) : 0) + 1;
+    final user = await _userProfileDao.getUserProfile();
+    if (user == null) return;
 
-        final newRequest = ResourceRequest(
-          id: newId,
-          resourceType: widget.resourceType,
-          quantity: int.parse(_quantityController.text),
-          note: _noteController.text,
-          requesterId: userProfile.deviceId,
-          status: 'open',
-          timestamp: DateTime.now().toIso8601String(),
-        );
-        await _resourceRequestDao.insertResourceRequest(newRequest);
-      }
-      Navigator.pop(context, true); // Return true to indicate success
+    if (_isEditing) {
+      final updated = Resource(
+        id: widget.resource!.id,
+        resourceType: widget.resourceType,
+        quantity: int.parse(_quantityController.text),
+        note: _noteController.text,
+        requesterId: widget.resource!.requesterId,
+        status: widget.resource!.status,
+        timestamp: DateTime.now().toIso8601String(),
+        owner: "me",
+        isRequested: false,
+        isMine: true,
+      );
+
+      await _resourceDao.updateResource(updated);
+    } else {
+      final all = await _resourceDao.getAllResources();
+      final newId =
+          (all.isNotEmpty ? all.map((e) => e.id).reduce((a, b) => a > b ? a : b) : 0) +
+              1;
+
+      final resource = Resource(
+        id: newId,
+        resourceType: widget.resourceType,
+        quantity: int.parse(_quantityController.text),
+        note: _noteController.text,
+        requesterId: user.deviceId,
+        status: 'available',
+        timestamp: DateTime.now().toIso8601String(),
+        owner: "me",
+        isRequested: false,
+        isMine: true,
+      );
+
+      await _resourceDao.addResource(resource);
     }
+
+    Navigator.pop(context, true);
   }
 }

@@ -1,3 +1,4 @@
+
 class Resource {
   final int id;
   final String resourceType;

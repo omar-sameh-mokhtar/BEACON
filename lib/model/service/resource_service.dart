@@ -1,5 +1,5 @@
 import 'package:beacon/model/db.helper.dart';
-import 'package:beacon/model/data/ResourceRequest.dart';
+import 'package:beacon/model/data/Resource.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 
