@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:beacon/model/data/Device.dart';
-import 'package:beacon/model/mapper/device_mapper.dart';
+import 'package:flutter_p2p_connection/flutter_p2p_connection.dart';
+
 import 'package:beacon/presentation/widgets/AppBarTop.dart';
 import 'package:beacon/presentation/widgets/NavigationBarBottom.dart';
 import 'package:beacon/presentation/widgets/FloatingVoiceButton.dart';
-import 'package:flutter_p2p_connection/flutter_p2p_connection.dart';
 
 import '../../model/service/p2p_service.dart';
 
@@ -18,73 +17,53 @@ class NetworkDashboardPage extends StatefulWidget {
 class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
   final P2PService _p2pService = P2PService();
 
-  final List<Device> _devices = [];
-
+  // ====== STATE ======
+  List<BleDiscoveredDevice> _discoveredDevices = [];
   bool _isScanning = false;
-  String _networkStatus = "Idle";
-
-  HotspotHostState? _hostState;
   HotspotClientState? _clientState;
 
+  // ====== LIFECYCLE ======
   @override
   void initState() {
     super.initState();
+
+    _p2pService.setCallbacks(
+      clientState: (state) => setState(() => _clientState = state),
+      devicesDiscovered: (devices) =>
+          setState(() => _discoveredDevices = devices),
+      scanningChanged: (scanning) =>
+          setState(() => _isScanning = scanning),
+      log: (msg) => debugPrint(msg),
+    );
+
     _initP2P();
   }
 
   Future<void> _initP2P() async {
     await P2PService.checkAndRequestPermissions(context);
     await P2PService.checkAndEnableServices(context);
-
-    _p2pService.setCallbacks(
-      hostState: (state) {
-        setState(() {
-          _hostState = state;
-          _networkStatus = state.isActive ? "Hosting" : "Idle";
-        });
-      },
-      clientState: (state) {
-        setState(() {
-          _clientState = state;
-          _networkStatus = state.isActive ? "Connected" : "Idle";
-        });
-      },
-      devicesDiscovered: (bleDevices) {
-        setState(() {
-          _devices
-            ..clear()
-            ..addAll(
-              bleDevices.map(DeviceMapper.fromBle),
-            );
-        });
-      },
-      scanningChanged: (scanning) {
-        setState(() {
-          _isScanning = scanning;
-        });
-      },
-      log: (msg) {
-        debugPrint("[P2P] $msg");
-      },
-    );
-
-    await _p2pService.initialize();
+    await _p2pService.initialize(); // SAFE (singleton)
   }
 
-  @override
-  void dispose() {
-    _p2pService.dispose();
-    super.dispose();
+  // ====== HELPERS ======
+  String get _networkStatus {
+    if (_clientState?.isActive == true) return "Connected";
+    if (_isScanning) return "Scanning";
+    return "Idle";
   }
 
-  void _startScan() async {
-    await _p2pService.startDiscoveryViaBLE();
+  Color get _statusColor {
+    switch (_networkStatus) {
+      case "Connected":
+        return Colors.green;
+      case "Scanning":
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
   }
 
-  void _stopScan() async {
-    await _p2pService.stopDiscovery();
-  }
-
+  // ====== UI ======
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -112,53 +91,38 @@ class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
     );
   }
 
-  // ---------------- UI PARTS ----------------
+  // ================= UI PARTS =================
 
   Widget _buildHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          "Discovered Devices: ${_devices.length}",
+          "Discovered Devices: ${_discoveredDevices.length}",
           style: const TextStyle(color: Colors.white),
         ),
-        Row(
-          children: [
-            IconButton(
-              icon: Icon(
-                _isScanning ? Icons.stop : Icons.radar,
-                color: _isScanning ? Colors.red : Colors.green,
-              ),
-              onPressed: _isScanning ? _stopScan : _startScan,
-            ),
-          ],
+        IconButton(
+          icon: Icon(
+            _isScanning ? Icons.stop : Icons.radar,
+            color: _isScanning ? Colors.red : Colors.green,
+          ),
+          onPressed: _isScanning
+              ? _p2pService.stopDiscovery
+              : _p2pService.startDiscoveryViaBLE,
         ),
       ],
     );
   }
 
   Widget _buildStatus() {
-    Color color;
-
-    switch (_networkStatus) {
-      case "Hosting":
-        color = Colors.orange;
-        break;
-      case "Connected":
-        color = Colors.green;
-        break;
-      default:
-        color = Colors.grey;
-    }
-
     return Text(
       "Network Status: $_networkStatus",
-      style: TextStyle(color: color),
+      style: TextStyle(color: _statusColor),
     );
   }
 
   Widget _buildDevicesList() {
-    if (_devices.isEmpty) {
+    if (_discoveredDevices.isEmpty) {
       return const Center(
         child: Text(
           "No devices discovered",
@@ -168,51 +132,46 @@ class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
     }
 
     return ListView.builder(
-      itemCount: _devices.length,
+      itemCount: _discoveredDevices.length,
       itemBuilder: (_, index) {
-        final device = _devices[index];
+        final device = _discoveredDevices[index];
         return _deviceCard(device);
       },
     );
   }
 
-  Widget _deviceCard(Device device) {
+  Widget _deviceCard(BleDiscoveredDevice device) {
+    final connected = _clientState?.isActive == true;
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: device.isConnected ? Colors.green : Colors.grey,
+          color: connected ? Colors.green : Colors.grey,
         ),
       ),
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: Colors.red,
-          child: const Icon(Icons.person, color: Colors.white),
+          child: const Icon(Icons.wifi, color: Colors.white),
         ),
         title: Text(
-          device.name,
+          device.deviceName ?? "Unknown Device",
           style: const TextStyle(
               color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Last seen: ${device.lastSeen}",
-              style: const TextStyle(color: Colors.grey),
-            ),
-          ],
+        subtitle: Text(
+          device.deviceAddress ?? "No address",
+          style: const TextStyle(color: Colors.grey),
         ),
-        trailing: Icon(
-          device.isConnected ? Icons.link : Icons.link_off,
-          color: device.isConnected ? Colors.green : Colors.grey,
+        trailing: ElevatedButton(
+          onPressed: connected
+              ? null
+              : () => _p2pService.connectToDiscoveredHost(device),
+          child: const Text("Connect"),
         ),
-        onTap: () {
-          // TODO
-          // connect / open chat / send request
-        },
       ),
     );
   }
@@ -226,12 +185,15 @@ class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
           padding: EdgeInsets.symmetric(
             vertical: size.height * 0.018,
           ),
-          shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
-        onPressed: () {
+        onPressed: _clientState?.isActive == true
+            ? () {
           // TODO: open broadcast dialog
-        },
+        }
+            : null,
         child: const Text(
           "Send Broadcast Message",
           style: TextStyle(color: Colors.white),

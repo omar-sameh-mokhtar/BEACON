@@ -3,15 +3,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_p2p_connection/flutter_p2p_connection.dart';
 
 class P2PService {
+  // ================= SINGLETON =================
+  static final P2PService _instance = P2PService._internal();
+  factory P2PService() => _instance;
+  P2PService._internal();
+
   final FlutterP2pHost _host = FlutterP2pHost();
   final FlutterP2pClient _client = FlutterP2pClient();
 
-  StreamSubscription<HotspotHostState>? _hostStateSubscription;
-  StreamSubscription<HotspotClientState>? _clientStateSubscription;
-  StreamSubscription<String>? _hostMessageSubscription;
-  StreamSubscription<String>? _clientMessageSubscription;
+  bool _initialized = false;
 
-  // Callbacks
+  // ================= STREAMS =================
+  StreamSubscription<HotspotHostState>? _hostStateSub;
+  StreamSubscription<HotspotClientState>? _clientStateSub;
+  StreamSubscription<String>? _hostMsgSub;
+  StreamSubscription<String>? _clientMsgSub;
+
+  // ================= CALLBACKS =================
   Function(HotspotHostState)? onHostStateChanged;
   Function(HotspotClientState)? onClientStateChanged;
   Function(String)? onMessageReceived;
@@ -35,105 +43,133 @@ class P2PService {
     onScanningChanged = scanningChanged;
   }
 
+  // ================= INIT =================
   Future<void> initialize() async {
+    if (_initialized) {
+      onLog?.call("P2P already initialized – skipping");
+      return;
+    }
+
     await _host.initialize();
     await _client.initialize();
 
-    _hostStateSubscription = _host.streamHotspotState().listen((state) {
+    _hostStateSub = _host.streamHotspotState().listen((state) {
       onHostStateChanged?.call(state);
-      onLog?.call("Host State: ${state.isActive ? 'Active' : 'Inactive'}");
+      onLog?.call("HOST: ${state.isActive ? 'ACTIVE' : 'INACTIVE'}");
     });
 
-    _hostMessageSubscription = _host.streamReceivedTexts().listen((message) {
-      onMessageReceived?.call("HOST received: $message");
-      onLog?.call("Message received as HOST: $message");
-    });
-
-    _clientStateSubscription = _client.streamHotspotState().listen((state) {
+    _clientStateSub = _client.streamHotspotState().listen((state) {
       onClientStateChanged?.call(state);
-      onLog?.call("Client State: ${state.isActive ? 'Connected' : 'Disconnected'}");
+      onLog?.call("CLIENT: ${state.isActive ? 'CONNECTED' : 'DISCONNECTED'}");
     });
 
-    _clientMessageSubscription = _client.streamReceivedTexts().listen((message) {
-      onMessageReceived?.call("CLIENT received: $message");
-      onLog?.call("Message received as CLIENT: $message");
+    _hostMsgSub = _host.streamReceivedTexts().listen((msg) {
+      onMessageReceived?.call("HOST received: $msg");
     });
 
-    onLog?.call("P2P Initialized. Ready for actions.");
+    _clientMsgSub = _client.streamReceivedTexts().listen((msg) {
+      onMessageReceived?.call("CLIENT received: $msg");
+    });
+
+    _initialized = true;
+    onLog?.call("P2P initialized successfully");
   }
 
-  Future<void> createGroupAndAdvertise(HotspotHostState? hostState, HotspotClientState? clientState) async {
-    await removeGroup(hostState, clientState);
+  // ================= HOST =================
+  Future<void> createGroupAndAdvertise() async {
+    await removeConnection();
     final state = await _host.createGroup(advertise: true);
+
     if (state.isActive) {
-      onLog?.call("Group Created (Host). SSID: ${state.ssid}");
+      onLog?.call("Host group created: ${state.ssid}");
     } else {
-      onLog?.call("Failed to create group: ${state.failureReason}");
+      onLog?.call("Host creation failed: ${state.failureReason}");
     }
   }
 
-  Future<void> removeGroup(HotspotHostState? hostState, HotspotClientState? clientState) async {
-    if (hostState?.isActive == true) {
-      await _host.removeGroup();
-      onLog?.call("Host group removed.");
-    } else if (clientState?.isActive == true) {
-      await _client.disconnect();
-      onLog?.call("Client disconnected.");
-    } else {
-      onLog?.call("Not connected/hosting.");
-    }
-  }
-
+  // ================= CLIENT =================
   Future<void> startDiscoveryViaBLE() async {
-    await removeGroup(null, null); // Assuming states not needed here, or pass them
+    await removeConnection();
     onScanningChanged?.call(true);
     onDevicesDiscovered?.call([]);
+
     await _client.startScan((devices) {
       onDevicesDiscovered?.call(devices);
     });
-    onLog?.call("BLE Discovery started.");
+
+    onLog?.call("BLE scan started");
   }
 
   Future<void> stopDiscovery() async {
     await _client.stopScan();
     onScanningChanged?.call(false);
-    onLog?.call("BLE Discovery stopped.");
+    onLog?.call("BLE scan stopped");
   }
 
   Future<void> connectToDiscoveredHost(BleDiscoveredDevice device) async {
     await stopDiscovery();
-    onLog?.call("Attempting to connect to ${device.deviceName}...");
+    onLog?.call("Connecting to ${device.deviceName}");
     await _client.connectWithDevice(device);
   }
 
-  Future<void> broadcastTextMessage(String message, HotspotHostState? hostState, HotspotClientState? clientState) async {
-    if (message.isEmpty) return;
-    if (hostState?.isActive == true) {
-      await _host.broadcastText(message);
-      onLog?.call("Host sent: $message");
-    } else if (clientState?.isActive == true) {
-      await _client.broadcastText(message);
-      onLog?.call("Client sent: $message");
-    } else {
-      onLog?.call("Cannot send: Not connected or hosting.");
+  // ================= COMMON =================
+  Future<void> broadcastText(String msg,
+      {bool asHost = false, bool asClient = false}) async {
+    if (msg.isEmpty) return;
+
+    if (asHost) {
+      await _host.broadcastText(msg);
+    } else if (asClient) {
+      await _client.broadcastText(msg);
     }
   }
 
+  Future<void> removeConnection() async {
+    try {
+      await _client.disconnect();
+    } catch (_) {}
+
+    try {
+      await _host.removeGroup();
+    } catch (_) {}
+  }
+
+  // ================= SAFE DISPOSE =================
+  Future<void> safeDispose() async {
+    if (!_initialized) return;
+
+    await removeConnection();
+
+    await _hostStateSub?.cancel();
+    await _clientStateSub?.cancel();
+    await _hostMsgSub?.cancel();
+    await _clientMsgSub?.cancel();
+
+    await _client.dispose();
+    await _host.dispose();
+
+    _initialized = false;
+    onLog?.call("P2P disposed safely");
+  }
+
+  // ================= PERMISSIONS =================
   static Future<void> checkAndRequestPermissions(BuildContext context) async {
     final p2p = FlutterP2pHost();
+
     if (!await p2p.checkP2pPermissions()) {
       await p2p.askP2pPermissions();
     }
-    if (!await p2p.checkStoragePermission()) {
-      await p2p.askStoragePermission();
-    }
     if (!await p2p.checkBluetoothPermissions()) {
       await p2p.askBluetoothPermissions();
+    }
+    if (!await p2p.checkStoragePermission()) {
+      await p2p.askStoragePermission();
     }
   }
 
   static Future<void> checkAndEnableServices(BuildContext context) async {
     final p2p = FlutterP2pHost();
+
     if (!await p2p.checkWifiEnabled()) {
       await p2p.enableWifiServices();
     }
@@ -143,14 +179,5 @@ class P2PService {
     if (!await p2p.checkBluetoothEnabled()) {
       await p2p.enableBluetoothServices();
     }
-  }
-
-  void dispose() {
-    _hostStateSubscription?.cancel();
-    _clientStateSubscription?.cancel();
-    _hostMessageSubscription?.cancel();
-    _clientMessageSubscription?.cancel();
-    _client.dispose();
-    _host.dispose();
   }
 }
