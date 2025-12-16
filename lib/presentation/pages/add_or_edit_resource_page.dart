@@ -171,7 +171,7 @@ class _AddOrEditResourcePageState extends State<AddOrEditResourcePage> {
         status: 'available',
         timestamp: DateTime.now().toIso8601String(),
         owner: user?.name ?? "Me",
-        isRequested: false,
+        isRequested: true,
         isMine: true,
       );
 

@@ -169,7 +169,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
           itemCount: filtered.length,
           itemBuilder: (_, index) {
             final item = filtered[index];
-            final isMine = item.requesterId == _currentUserId;
+            final isMine = item.isMine;
             return _buildResourceCard(item, isMine);
           },
         );
@@ -198,7 +198,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
               ),
               const SizedBox(width: 8),
               Text(
-                isMine ? 'My Resource' : 'Resource from others',
+                isMine ? 'My Resource' : 'Resource from ${item.owner}',
                 style: TextStyle(
                   color: isMine ? Colors.blue : Colors.green,
                   fontWeight: FontWeight.bold,
