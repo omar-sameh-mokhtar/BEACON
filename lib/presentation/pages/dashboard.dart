@@ -1,7 +1,12 @@
-import 'package:beacon/presentation/widgets/AppBarTop.dart';
-import 'package:beacon/presentation/widgets/FloatingVoiceButton.dart';
-import 'package:beacon/presentation/widgets/NavigationBarBottom.dart';
 import 'package:flutter/material.dart';
+import 'package:beacon/model/data/Device.dart';
+import 'package:beacon/model/mapper/device_mapper.dart';
+import 'package:beacon/presentation/widgets/AppBarTop.dart';
+import 'package:beacon/presentation/widgets/NavigationBarBottom.dart';
+import 'package:beacon/presentation/widgets/FloatingVoiceButton.dart';
+import 'package:flutter_p2p_connection/flutter_p2p_connection.dart';
+
+import '../../model/service/p2p_service.dart';
 
 class NetworkDashboardPage extends StatefulWidget {
   const NetworkDashboardPage({super.key});
@@ -11,105 +16,227 @@ class NetworkDashboardPage extends StatefulWidget {
 }
 
 class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
-  String selectedRange = "100m";
-  final List<Map<String, String>> devices = [
-    {"name": "Device 1", "lastSeen": "2 mins ago", "lastMsg": "Help"},
-    {"name": "Device 2", "lastSeen": "5 mins ago", "lastMsg": "All good"},
-    {"name": "Device 3", "lastSeen": "10 mins ago", "lastMsg": "Need food"},
-  ];
+  final P2PService _p2pService = P2PService();
+
+  final List<Device> _devices = [];
+
+  bool _isScanning = false;
+  String _networkStatus = "Idle";
+
+  HotspotHostState? _hostState;
+  HotspotClientState? _clientState;
+
+  @override
+  void initState() {
+    super.initState();
+    _initP2P();
+  }
+
+  Future<void> _initP2P() async {
+    await P2PService.checkAndRequestPermissions(context);
+    await P2PService.checkAndEnableServices(context);
+
+    _p2pService.setCallbacks(
+      hostState: (state) {
+        setState(() {
+          _hostState = state;
+          _networkStatus = state.isActive ? "Hosting" : "Idle";
+        });
+      },
+      clientState: (state) {
+        setState(() {
+          _clientState = state;
+          _networkStatus = state.isActive ? "Connected" : "Idle";
+        });
+      },
+      devicesDiscovered: (bleDevices) {
+        setState(() {
+          _devices
+            ..clear()
+            ..addAll(
+              bleDevices.map(DeviceMapper.fromBle),
+            );
+        });
+      },
+      scanningChanged: (scanning) {
+        setState(() {
+          _isScanning = scanning;
+        });
+      },
+      log: (msg) {
+        debugPrint("[P2P] $msg");
+      },
+    );
+
+    await _p2pService.initialize();
+  }
+
+  @override
+  void dispose() {
+    _p2pService.dispose();
+    super.dispose();
+  }
+
+  void _startScan() async {
+    await _p2pService.startDiscoveryViaBLE();
+  }
+
+  void _stopScan() async {
+    await _p2pService.stopDiscovery();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBarTop(title:"Network Dashboard"),
+      appBar: AppBarTop(title: "Network Dashboard"),
+      floatingActionButton: Floatingvoicebutton(),
+      bottomNavigationBar: const NavigationBarBottom(currentIndex: 0),
       body: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("Connected: ${devices.length} Devices",
-                    style: TextStyle(color: Colors.white)),
-                Row(
-                  children: [
-                    DropdownButton(
-                      dropdownColor: Colors.grey[900],
-                      style: TextStyle(color: Colors.white),
-                      value: selectedRange,
-                      items: ["50m", "100m", "200m"]
-                          .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                          .toList(),
-                      onChanged: (v) {
-                        setState(() {
-                          selectedRange = v!;
-                        });
-                      },
-                    ),
-                    IconButton(
-                        onPressed: () {},
-                        icon: Icon(Icons.refresh, color: Colors.white))
-                  ],
-                )
-              ],
-            ),
-            SizedBox(height: 10),
-            Text("Network Status: Connected",
-                style: TextStyle(color: Colors.green)),
-            SizedBox(height: 10),
-            Expanded(
-              child: ListView.builder(
-                itemCount: devices.length,
-                itemBuilder: (context, i) {
-                  final d = devices[i];
-                  return Container(
-                    margin: EdgeInsets.symmetric(vertical: 6),
-                    decoration: BoxDecoration(
-                        color: Colors.grey[900],
-                        borderRadius: BorderRadius.circular(10)),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                          backgroundColor: Colors.red,
-                          child: Icon(Icons.person, color: Colors.white)),
-                      title: Text(d["name"]!,
-                          style: TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.bold)),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("Last seen: ${d["lastSeen"]}",
-                              style: TextStyle(color: Colors.grey)),
-                          Text("Last msg: ${d["lastMsg"]}",
-                              style: TextStyle(color: Colors.grey))
-                        ],
-                      ),
-                      trailing: Icon(Icons.chat_bubble_outline, color: Colors.red),
-                    ),
-                  );
-                },
-              ),
-            ),
-            SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    padding: EdgeInsets.symmetric(vertical: 14)),
-                onPressed: () {},
-                child: Text("Send Broadcast Message",
-                    style: TextStyle(color: Colors.white)),
-              ),
-            )
+            _buildHeader(),
+            const SizedBox(height: 8),
+            _buildStatus(),
+            const SizedBox(height: 12),
+            Expanded(child: _buildDevicesList()),
+            const SizedBox(height: 10),
+            _buildBroadcastButton(size),
           ],
         ),
       ),
-      floatingActionButton: Floatingvoicebutton(),
-      bottomNavigationBar: NavigationBarBottom(currentIndex: 0)
+    );
+  }
+
+  // ---------------- UI PARTS ----------------
+
+  Widget _buildHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          "Discovered Devices: ${_devices.length}",
+          style: const TextStyle(color: Colors.white),
+        ),
+        Row(
+          children: [
+            IconButton(
+              icon: Icon(
+                _isScanning ? Icons.stop : Icons.radar,
+                color: _isScanning ? Colors.red : Colors.green,
+              ),
+              onPressed: _isScanning ? _stopScan : _startScan,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatus() {
+    Color color;
+
+    switch (_networkStatus) {
+      case "Hosting":
+        color = Colors.orange;
+        break;
+      case "Connected":
+        color = Colors.green;
+        break;
+      default:
+        color = Colors.grey;
+    }
+
+    return Text(
+      "Network Status: $_networkStatus",
+      style: TextStyle(color: color),
+    );
+  }
+
+  Widget _buildDevicesList() {
+    if (_devices.isEmpty) {
+      return const Center(
+        child: Text(
+          "No devices discovered",
+          style: TextStyle(color: Colors.white70),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      itemCount: _devices.length,
+      itemBuilder: (_, index) {
+        final device = _devices[index];
+        return _deviceCard(device);
+      },
+    );
+  }
+
+  Widget _deviceCard(Device device) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: device.isConnected ? Colors.green : Colors.grey,
+        ),
+      ),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: Colors.red,
+          child: const Icon(Icons.person, color: Colors.white),
+        ),
+        title: Text(
+          device.name,
+          style: const TextStyle(
+              color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Last seen: ${device.lastSeen}",
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+        trailing: Icon(
+          device.isConnected ? Icons.link : Icons.link_off,
+          color: device.isConnected ? Colors.green : Colors.grey,
+        ),
+        onTap: () {
+          // TODO
+          // connect / open chat / send request
+        },
+      ),
+    );
+  }
+
+  Widget _buildBroadcastButton(Size size) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          padding: EdgeInsets.symmetric(
+            vertical: size.height * 0.018,
+          ),
+          shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        onPressed: () {
+          // TODO: open broadcast dialog
+        },
+        child: const Text(
+          "Send Broadcast Message",
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
     );
   }
 }
