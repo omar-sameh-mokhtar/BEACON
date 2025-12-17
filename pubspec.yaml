@@ -44,6 +44,9 @@ dependencies:
 
   flutter_p2p_connection: ^3.0.2
 
+  speech_to_text: ^7.3.0
+  flutter_tts: ^4.2.3
+
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1
   flutter_test:

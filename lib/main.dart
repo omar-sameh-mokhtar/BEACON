@@ -11,8 +11,18 @@ import 'presentation/pages/landing_page.dart';
 
 import 'package:go_router/go_router.dart';
 
+import 'viewmodels/voice_viewmodel.dart';
+
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => VoiceViewModel()),
+        ChangeNotifierProvider(create: (context) => MyAppState())
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 final GoRouter _router = GoRouter(
@@ -58,9 +68,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => MyAppState(),
-      child: MaterialApp.router(
+    return MaterialApp.router(
         routerConfig: _router,
         debugShowCheckedModeBanner: false,
         title: 'BEACON',
@@ -78,8 +86,7 @@ class MyApp extends StatelessWidget {
             elevation: 0,
           ),
         ),
-      )
-    );
+      );
   }
 }
 

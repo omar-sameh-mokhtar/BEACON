@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../viewmodels/voice_viewmodel.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -10,9 +12,11 @@ class LandingPage extends StatefulWidget {
 
 class _LandingPageState extends State<LandingPage> {
   //const LandingPage({super.key});
-
+  
   @override
   Widget build(BuildContext context) {
+    final voiceVM = Provider.of<VoiceViewModel>(context);
+
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -124,14 +128,12 @@ class _LandingPageState extends State<LandingPage> {
                     FloatingActionButton(
                       backgroundColor: Colors.red,
                       elevation: 4,
-                      onPressed: () {
-                        //ay7aga
-                      },
-                      child: const Icon(Icons.mic, color: Colors.white, size: 32),
+                      onPressed: () => voiceVM.toggleListening(context),
+                      child: Icon(voiceVM.isListening ? Icons.mic : Icons.mic_none, color: Colors.white, size: 32),
                     ),
                     const SizedBox(height: 14),
-                    const Text(
-                      "Press to start voice communication",
+                    Text(
+                      voiceVM.isListening ? "Listening..." :"Pres to start voice communication",
                       style: TextStyle(
                         color: Colors.white70,
                         fontSize: 14,
