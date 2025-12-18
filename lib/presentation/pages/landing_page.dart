@@ -2,6 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/voice_viewmodel.dart';
+import 'package:flutter_p2p_connection/flutter_p2p_connection.dart';
+import 'dart:async';
+import '../../viewmodels/p2p_viewmodel.dart';
+
+//final FlutterP2pHost hostInterface = FlutterP2pHost();
+//final FlutterP2pClient clientInterface = FlutterP2pClient();
+
+
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -12,6 +20,39 @@ class LandingPage extends StatefulWidget {
 
 class _LandingPageState extends State<LandingPage> {
   //const LandingPage({super.key});
+
+  Future<void> _prepareAndNavigate(BuildContext context, bool isHost) async {
+    //_updateLog("Checking permissions and services...");
+    final p2pVM = Provider.of<P2PViewModel>(context, listen: false);
+    final hostInterface = p2pVM.service.hostInterface;
+    // Check Permissions
+    if (!await hostInterface.checkP2pPermissions()) {
+      //_updateLog("Requesting P2P permissions...");
+      await hostInterface.askP2pPermissions();
+    }
+    if (!await hostInterface.checkBluetoothPermissions()) {
+      //_updateLog("Requesting Bluetooth permissions...");
+      await hostInterface.askBluetoothPermissions();
+    }
+
+    // Check Services
+    if (!await hostInterface.checkLocationEnabled()) {
+      //_updateLog("Enabling Location...");
+      await hostInterface.enableLocationServices();
+    }
+    if (!await hostInterface.checkWifiEnabled()) {
+      //_updateLog("Enabling Wi-Fi...");
+      await hostInterface.enableWifiServices();
+    }
+
+    //_updateLog("Navigating to Dashboard as ${isHost ? 'HOST' : 'CLIENT'}");
+    if (!context.mounted) return;
+    
+    p2pVM.startGlobalEngine(isHost);
+    
+    context.goNamed('dashboard', pathParameters: {'isHost': '$isHost'});
+  }
+
   
   @override
   Widget build(BuildContext context) {
@@ -76,7 +117,7 @@ class _LandingPageState extends State<LandingPage> {
                   children: [
                     ElevatedButton(
                       onPressed: () {
-                        Navigator.pushNamed(context, '/dashboard');
+                        _prepareAndNavigate(context, true);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
@@ -98,7 +139,7 @@ class _LandingPageState extends State<LandingPage> {
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () {
-                        context.go('/dashboard');
+                        _prepareAndNavigate(context, false);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color.fromARGB(255, 14, 15, 19),
@@ -109,7 +150,7 @@ class _LandingPageState extends State<LandingPage> {
                         ),
                       ),
                       child: const Text(
-                        "Join Communication",
+                        "Jooin Communication",
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 18,

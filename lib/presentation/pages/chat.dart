@@ -1,37 +1,67 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_p2p_connection/flutter_p2p_connection.dart';
+import 'dart:async';
+import '../../model/service/p2p_service.dart';
+import 'package:provider/provider.dart';
+import '../../viewmodels/p2p_viewmodel.dart';
+
 
 class ChattingPage extends StatefulWidget {
-  const ChattingPage({super.key});
+  final P2pClientInfo target;
+  final bool isHost;
+  const ChattingPage({super.key, required this.target, required this.isHost});
+  
 
   @override
   State<ChattingPage> createState() => ChattingPageState();
 }
 
 class ChattingPageState extends State<ChattingPage> {
-  String selectedPerson = "Eslam";
-
-  final List<Map<String, dynamic>> _messages = [];
-  final TextEditingController _textController = TextEditingController();
-
+  
+ // final List<String> _history = [];
+  final TextEditingController _ctrl = TextEditingController();
+  //StreamSubscription? _msgSub;
+/*
   @override
-  void dispose() {
-    _textController.dispose();
-    super.dispose();
-  }
+  void initState() {
+    super.initState();
+    final stream = widget.isHost ? widget.hostInterface.streamReceivedTexts() : widget.clientInterface.streamReceivedTexts();
+    _msgSub = stream.listen((msg) {
+      x="yes";
+      print("[MSG RECEIVED] $msg");
+      setState(() => _history.insert(0, "Peer: $msg"));
 
-  void _sendMessage({String? text, bool isMe = true}) {
-    String message = text ?? _textController.text;
-    if (message.isEmpty) return;
-    setState(() {
-      _messages.add({'text': message, 'isMe': isMe});
-      _textController.clear();
     });
   }
-
+*//*
+  void _send() async {
+    if (_ctrl.text.isEmpty) return;
+    bool ok = false;
+    if (widget.isHost) {
+      ok = await widget.hostInterface.sendTextToClient(_ctrl.text, widget.target.id);
+    } else {
+      await widget.clientInterface.broadcastText(_ctrl.text);
+      ok = true;
+    }
+    if (ok) {
+      setState(() {
+        _history.insert(0, "Me: ${_ctrl.text}");
+        _ctrl.clear();
+      });
+    }
+  }
+*//*
+  @override
+  void dispose() {
+    _msgSub?.cancel();
+    super.dispose();
+  }
+*/
   @override
   Widget build(BuildContext context) {
     double width_ = MediaQuery.of(context).size.width;
     double height_ = MediaQuery.of(context).size.height;
+    final vm = context.watch<P2PViewModel>();
 
     return Scaffold(
       backgroundColor: const Color(0xFF1E1E1E),
@@ -44,7 +74,8 @@ class ChattingPageState extends State<ChattingPage> {
           },
           color: Colors.white,
         ),
-        title: Text("Chat with $selectedPerson"),
+        title: Text("Chat with ${widget.target.username}",
+            style: const TextStyle(color: Colors.white)),
         titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20),
         centerTitle: true,
       ),
@@ -64,7 +95,7 @@ class ChattingPageState extends State<ChattingPage> {
                 children: [
                   const Icon(Icons.radar, color: Colors.white),
                   const SizedBox(width: 10),
-                  const Text("3 com", style: TextStyle(color: Colors.white)),
+                   Text(widget.target.id, style: TextStyle(color: Colors.white)),
                 ],
               ),
             ),
@@ -80,21 +111,23 @@ class ChattingPageState extends State<ChattingPage> {
                   borderRadius: BorderRadius.all(Radius.circular(20.0)),
                 ),
                 child: ListView.builder(
+                  reverse: true,
                   padding: const EdgeInsets.all(10),
-                  itemCount: _messages.length,
+                  itemCount: vm.chatHistory.length,
                   itemBuilder: (context, index) {
-                    final msg = _messages[index];
+                    final msg = vm.chatHistory[index];
                     return Container(
+                      
                       margin: const EdgeInsets.symmetric(vertical: 5),
-                      alignment: msg['isMe'] ? Alignment.centerRight : Alignment.centerLeft,
+                      alignment: /*msg['isMe'] ?*/ Alignment.centerRight,// : Alignment.centerLeft,
                       child: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: msg['isMe'] ? Colors.red : Colors.grey[700],
+                          color: /*msg['isMe'] ?*/ Colors.red,// : Colors.grey[700],
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          msg['text'],
+                          msg,
                           style: const TextStyle(color: Colors.white),
                         ),
                       ),
@@ -117,7 +150,7 @@ class ChattingPageState extends State<ChattingPage> {
                 Expanded(
                   child: TextField(
                     style: const TextStyle(color: Colors.white),
-                    controller: _textController,
+                    controller: _ctrl,
                     decoration: const InputDecoration(
                       hintText: 'Type or speak a message',
                       hintStyle: TextStyle(color: Colors.white54),
@@ -127,7 +160,12 @@ class ChattingPageState extends State<ChattingPage> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.send, color: Colors.white),
-                  onPressed: () => _sendMessage(),
+                  onPressed: () {
+                    if (_ctrl.text.isNotEmpty) {
+                      vm.sendMessage(_ctrl.text, widget.target.id, widget.isHost);
+                      _ctrl.clear();
+                    }
+                  },
                 ),
                 const Icon(Icons.mic, color: Colors.white),
               ],
@@ -153,7 +191,7 @@ class ChattingPageState extends State<ChattingPage> {
 
   Widget MessageButton(String text) {
     return ElevatedButton(
-      onPressed: () => _sendMessage(text: text, isMe: false),
+      onPressed: () => null,//_sendPredefinedMessage(text),
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color.fromARGB(255, 48, 48, 48),
         foregroundColor: Colors.white,

@@ -3,24 +3,57 @@ import 'package:flutter/material.dart';
 import 'package:flutter_p2p_connection/flutter_p2p_connection.dart';
 
 class P2PService {
-  // ================= SINGLETON =================
-  static final P2PService _instance = P2PService._internal();
-  factory P2PService() => _instance;
-  P2PService._internal();
 
-  final FlutterP2pHost _host = FlutterP2pHost();
-  final FlutterP2pClient _client = FlutterP2pClient();
+  final FlutterP2pHost hostInterface = FlutterP2pHost();
+  final FlutterP2pClient clientInterface = FlutterP2pClient();
 
-  bool _initialized = false;
+  Future<void> initHost() async => await hostInterface.initialize();
+  Future<void> initClient() async => await clientInterface.initialize();
+
+  Future<bool> ensurePermissions() async {
+    if (!await hostInterface.checkP2pPermissions()) {
+      await hostInterface.askP2pPermissions();
+    }
+    if (!await hostInterface.checkBluetoothPermissions()) {
+      await hostInterface.askBluetoothPermissions();
+    }
+    return await hostInterface.checkP2pPermissions() && 
+           await hostInterface.checkBluetoothPermissions();
+  }
+
+  Future<void> ensureServices() async {
+    if (!await hostInterface.checkLocationEnabled()) {
+      await hostInterface.enableLocationServices();
+    }
+    if (!await hostInterface.checkWifiEnabled()) {
+      await hostInterface.enableWifiServices();
+    }
+  }
+
+  Stream<String> getMessageStream(bool isHost) {
+    return isHost 
+        ? hostInterface.streamReceivedTexts() 
+        : clientInterface.streamReceivedTexts();
+  }
+
+  // Helper for status streams
+  Stream<List<P2pClientInfo>> getPeerStream(bool isHost) {
+    return isHost 
+        ? hostInterface.streamClientList() 
+        : clientInterface.streamClientList();
+  }
+
+
+  //bool _initialized = false;
 
   // ================= STREAMS =================
-  StreamSubscription<HotspotHostState>? _hostStateSub;
+  /*StreamSubscription<HotspotHostState>? _hostStateSub;
   StreamSubscription<HotspotClientState>? _clientStateSub;
   StreamSubscription<String>? _hostMsgSub;
-  StreamSubscription<String>? _clientMsgSub;
+  StreamSubscription<String>? _clientMsgSub;*/
 
   // ================= CALLBACKS =================
-  Function(HotspotHostState)? onHostStateChanged;
+  /*Function(HotspotHostState)? onHostStateChanged;
   Function(HotspotClientState)? onClientStateChanged;
   Function(String)? onMessageReceived;
   Function(String)? onLog;
@@ -41,12 +74,13 @@ class P2PService {
     onLog = log;
     onDevicesDiscovered = devicesDiscovered;
     onScanningChanged = scanningChanged;
-  }
+  }*/
 
+/*
   // ================= INIT =================
   Future<void> initialize() async {
     if (_initialized) {
-      onLog?.call("P2P already initialized – skipping");
+      //onLog?.call("P2P already initialized – skipping");
       return;
     }
 
@@ -179,5 +213,5 @@ class P2PService {
     if (!await p2p.checkBluetoothEnabled()) {
       await p2p.enableBluetoothServices();
     }
-  }
+  }*/
 }

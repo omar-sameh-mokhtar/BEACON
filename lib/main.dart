@@ -12,13 +12,15 @@ import 'presentation/pages/landing_page.dart';
 import 'package:go_router/go_router.dart';
 
 import 'viewmodels/voice_viewmodel.dart';
+import 'viewmodels/p2p_viewmodel.dart';
 
 void main() {
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => VoiceViewModel()),
-        ChangeNotifierProvider(create: (context) => MyAppState())
+        ChangeNotifierProvider(create: (context) => MyAppState()),
+        ChangeNotifierProvider(create: (context) => P2PViewModel()),
       ],
       child: const MyApp(),
     ),
@@ -34,9 +36,12 @@ final GoRouter _router = GoRouter(
       },
       routes: <RouteBase>[
         GoRoute(
-          path: 'dashboard',
+          name: 'dashboard',
+          path: 'dashboard/:isHost',
           builder: (BuildContext context, GoRouterState state) {
-            return const NetworkDashboardPage();
+            final isHost = state.pathParameters['isHost'] == 'true';
+
+            return NetworkDashboardPage(isHost: isHost);
           },
         ),
         GoRoute(
@@ -51,12 +56,15 @@ final GoRouter _router = GoRouter(
             return const ResourcesPage();
           },
         ),
-        GoRoute(
-          path: 'chat',
+        /*GoRoute(
+          name: 'chat',
+          path: 'chat/:target/:isHost',
           builder: (BuildContext context, GoRouterState state) {
-            return const ChattingPage();
+            final target = state.pathParameters['target'];
+            final isHost = state.pathParameters['isHost'] == 'true';
+            return ChattingPage(target: target, isHost: isHost);
           },
-        ),
+        ),*/
       ],
     ),
   ],

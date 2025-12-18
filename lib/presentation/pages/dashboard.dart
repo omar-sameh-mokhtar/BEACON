@@ -4,201 +4,201 @@ import 'package:flutter_p2p_connection/flutter_p2p_connection.dart';
 import 'package:beacon/presentation/widgets/AppBarTop.dart';
 import 'package:beacon/presentation/widgets/NavigationBarBottom.dart';
 import 'package:beacon/presentation/widgets/FloatingVoiceButton.dart';
-
+import 'chat.dart';
+import 'dart:async';
 import '../../model/service/p2p_service.dart';
+import 'package:provider/provider.dart';
+import '../../viewmodels/p2p_viewmodel.dart';
+
+//final FlutterP2pHost hostInterface = FlutterP2pHost();
+//final FlutterP2pClient clientInterface = FlutterP2pClient();
 
 class NetworkDashboardPage extends StatefulWidget {
-  const NetworkDashboardPage({super.key});
+  final bool isHost;
+  const NetworkDashboardPage({super.key, required this.isHost});
 
   @override
   State<NetworkDashboardPage> createState() => _NetworkDashboardPageState();
 }
 
 class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
-  final P2PService _p2pService = P2PService();
 
-  // ====== STATE ======
-  List<BleDiscoveredDevice> _discoveredDevices = [];
-  bool _isScanning = false;
-  HotspotClientState? _clientState;
+  /*List<P2pClientInfo> _peers = [];
+  List<BleDiscoveredDevice> _discoveredHosts = [];
+  String _connectionStatus = "Initializing...";
+  bool _isActive = false;
+  bool _isConnecting = false;*/
 
-  // ====== LIFECYCLE ======
-  @override
+  /*StreamSubscription? _stateSub;
+  StreamSubscription? _peerSub;*/
+
+  /*@override
   void initState() {
     super.initState();
-
-    _p2pService.setCallbacks(
-      clientState: (state) => setState(() => _clientState = state),
-      devicesDiscovered: (devices) =>
-          setState(() => _discoveredDevices = devices),
-      scanningChanged: (scanning) =>
-          setState(() => _isScanning = scanning),
-      log: (msg) => debugPrint(msg),
-    );
-
-    _initP2P();
-  }
-
-  Future<void> _initP2P() async {
-    await P2PService.checkAndRequestPermissions(context);
-    await P2PService.checkAndEnableServices(context);
-    await _p2pService.initialize(); // SAFE (singleton)
-  }
-
-  // ====== HELPERS ======
-  String get _networkStatus {
-    if (_clientState?.isActive == true) return "Connected";
-    if (_isScanning) return "Scanning";
-    return "Idle";
-  }
-
-  Color get _statusColor {
-    switch (_networkStatus) {
-      case "Connected":
-        return Colors.green;
-      case "Scanning":
-        return Colors.orange;
-      default:
-        return Colors.grey;
+    _startP2PEngine();
+  }*/
+  /*
+  Future<void> _startP2PEngine() async {
+    try {
+      if (widget.isHost) {
+        await hostInterface.initialize(); //
+        _stateSub = hostInterface.streamHotspotState().listen((state) {
+          setState(() {
+            _isActive = state.isActive;
+            _connectionStatus = state.isActive ? "Hosting: ${state.ssid}" : "Failed: ${state.failureReason}";
+          });
+          print("[HOST STATE] Active: ${state.isActive}, SSID: ${state.ssid}");
+        });
+        _peerSub = hostInterface.streamClientList().listen((list) {
+          setState(() => _peers = list);
+          print("[HOST PEERS] Count: ${list.length}");
+        });
+        await hostInterface.createGroup(advertise: true);
+      } else {
+        await clientInterface.initialize(); //
+        _stateSub = clientInterface.streamHotspotState().listen((state) {
+          setState(() {
+            _isActive = state.isActive;
+            _connectionStatus = state.isActive ? "Connected to Network" : "Searching...";
+            if (state.isActive) _isConnecting = false;
+          });
+        });
+        _peerSub = clientInterface.streamClientList().listen((list) => setState(() => _peers = list));
+        _scanForHosts();
+      }
+    } catch (e) {
+      setState(() => _connectionStatus = "Error: $e");
     }
-  }
+  }*/
+/*
+  void _scanForHosts() async {
+    print("[CLIENT] Starting Auto-Scan...");
+    setState(() => _connectionStatus = "Scanning for emergency signal...");
 
+    await clientInterface.startScan((devices) {
+      setState(() => _discoveredHosts = devices);
+
+      // AUTO-JOIN LOGIC:
+      // If we found a device, aren't active yet, and aren't already trying to connect
+      if (devices.isNotEmpty && !_isActive && !_isConnecting) {
+        _isConnecting = true;
+        final target = devices.first;
+        
+        print("[CLIENT] Found ${target.deviceName}. Auto-connecting...");
+        
+        setState(() => _connectionStatus = "Auto-joining: ${target.deviceName}...");
+        
+        // It's best practice to stop scanning before initiating a connection
+        clientInterface.stopScan().then((_) {
+          clientInterface.connectWithDevice(target);
+        });
+      }
+    });
+  }*/
+/*
+  @override
+  void dispose() {
+    _stateSub?.cancel();
+    _peerSub?.cancel();
+    super.dispose();
+  }*/
   // ====== UI ======
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
+    final p2pVM = context.watch<P2PViewModel>();
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBarTop(title: "Network Dashboard"),
-      floatingActionButton: Floatingvoicebutton(),
-      bottomNavigationBar: const NavigationBarBottom(currentIndex: 0),
+      appBar: AppBarTop(title:"Network Dashboard"),
       body: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(),
-            const SizedBox(height: 8),
-            _buildStatus(),
-            const SizedBox(height: 12),
-            Expanded(child: _buildDevicesList()),
-            const SizedBox(height: 10),
-            _buildBroadcastButton(size),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Connected: ${p2pVM.peers.length} Devices",
+                    style: TextStyle(color: Colors.white)),
+                Row(
+                  children: [
+                    /*DropdownButton(
+                      dropdownColor: Colors.grey[900],
+                      style: TextStyle(color: Colors.white),
+                      value: selectedRange,
+                      items: ["50m", "100m", "200m"]
+                          .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                          .toList(),
+                      onChanged: (v) {
+                        setState(() {
+                          selectedRange = v!;
+                        });
+                      },
+                    ),*/
+                    IconButton(
+                        onPressed: () {},
+                        icon: Icon(Icons.refresh, color: Colors.white))
+                  ],
+                )
+              ],
+            ),
+            SizedBox(height: 10),
+            Text("Network Status: ${p2pVM.connectionStatus}",
+                style: TextStyle(color: Colors.green)),
+            SizedBox(height: 10),
+            Expanded(
+              child: ListView.builder(
+                itemCount: p2pVM.peers.length,
+                itemBuilder: (context, i) {
+                  final p = p2pVM.peers[i];
+                  return Container(
+                    margin: EdgeInsets.symmetric(vertical: 6),
+                    decoration: BoxDecoration(
+                        color: Colors.grey[900],
+                        borderRadius: BorderRadius.circular(10)),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                          backgroundColor: Colors.red,
+                          child: Icon(Icons.person, color: Colors.white)),
+                      title: Text(p.username!,
+                          style: TextStyle(
+                              color: Colors.white, fontWeight: FontWeight.bold)),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(p2pVM.peers[i].isHost! ? "Host" : "Role: Client",
+                              style: TextStyle(color: Colors.grey)),
+                          Text("Last seen: 3 min ago",
+                              style: TextStyle(color: Colors.grey)),
+                          Text("Last msg: hey",
+                              style: TextStyle(color: Colors.grey))
+                        ],
+                      ),
+                      trailing: Icon(Icons.chat_bubble_outline, color: Colors.red),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChattingPage(target: p, isHost: widget.isHost))),
+                    ),
+                  );
+                },
+              ),
+            ),
+            SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    padding: EdgeInsets.symmetric(vertical: 14)),
+                onPressed: () {},
+                child: Text("Send Broadcast Message",
+                    style: TextStyle(color: Colors.white)),
+              ),
+            )
           ],
         ),
       ),
-    );
-  }
-
-  // ================= UI PARTS =================
-
-  Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          "Discovered Devices: ${_discoveredDevices.length}",
-          style: const TextStyle(color: Colors.white),
-        ),
-        IconButton(
-          icon: Icon(
-            _isScanning ? Icons.stop : Icons.radar,
-            color: _isScanning ? Colors.red : Colors.green,
-          ),
-          onPressed: _isScanning
-              ? _p2pService.stopDiscovery
-              : _p2pService.startDiscoveryViaBLE,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatus() {
-    return Text(
-      "Network Status: $_networkStatus",
-      style: TextStyle(color: _statusColor),
-    );
-  }
-
-  Widget _buildDevicesList() {
-    if (_discoveredDevices.isEmpty) {
-      return const Center(
-        child: Text(
-          "No devices discovered",
-          style: TextStyle(color: Colors.white70),
-        ),
-      );
-    }
-
-    return ListView.builder(
-      itemCount: _discoveredDevices.length,
-      itemBuilder: (_, index) {
-        final device = _discoveredDevices[index];
-        return _deviceCard(device);
-      },
-    );
-  }
-
-  Widget _deviceCard(BleDiscoveredDevice device) {
-    final connected = _clientState?.isActive == true;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: connected ? Colors.green : Colors.grey,
-        ),
-      ),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Colors.red,
-          child: const Icon(Icons.wifi, color: Colors.white),
-        ),
-        title: Text(
-          device.deviceName ?? "Unknown Device",
-          style: const TextStyle(
-              color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          device.deviceAddress ?? "No address",
-          style: const TextStyle(color: Colors.grey),
-        ),
-        trailing: ElevatedButton(
-          onPressed: connected
-              ? null
-              : () => _p2pService.connectToDiscoveredHost(device),
-          child: const Text("Connect"),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBroadcastButton(Size size) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red,
-          padding: EdgeInsets.symmetric(
-            vertical: size.height * 0.018,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        onPressed: _clientState?.isActive == true
-            ? () {
-          // TODO: open broadcast dialog
-        }
-            : null,
-        child: const Text(
-          "Send Broadcast Message",
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
+      floatingActionButton: Floatingvoicebutton(),
+      bottomNavigationBar: NavigationBarBottom(currentIndex: 0)
     );
   }
 }
