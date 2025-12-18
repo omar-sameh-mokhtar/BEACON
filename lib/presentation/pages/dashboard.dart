@@ -182,8 +182,9 @@ class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
             ),
             SizedBox(height: 10),
             SizedBox(
-              width: double.infinity,
+              width:  MediaQuery.of(context).size.width * 0.7,
               child: ElevatedButton(
+                key: const Key('Broadcast_button'),
                 style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
                     shape: RoundedRectangleBorder(

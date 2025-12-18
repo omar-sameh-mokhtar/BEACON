@@ -149,6 +149,7 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 8),
           if (mode == ProfileMode.view)
             TextButton(
+              key: const Key('edit_profile_button'),
               onPressed: () => setState(() => mode = ProfileMode.edit),
               child: const Text("Edit", style: TextStyle(color: Colors.red)),
             ),

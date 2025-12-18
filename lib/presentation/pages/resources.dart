@@ -219,6 +219,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
           /// REQUEST BUTTON (for others)
           if (!isMine)
             ElevatedButton(
+              key: const Key('request_Resource_button'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
               ),

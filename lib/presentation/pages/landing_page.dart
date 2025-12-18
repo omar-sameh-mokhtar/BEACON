@@ -116,6 +116,7 @@ class _LandingPageState extends State<LandingPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     ElevatedButton(
+                      key: const Key('start_button'),
                       onPressed: () {
                         _prepareAndNavigate(context, true);
                       },
@@ -138,6 +139,7 @@ class _LandingPageState extends State<LandingPage> {
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton(
+                      key: const Key('join_button'),
                       onPressed: () {
                         _prepareAndNavigate(context, false);
                       },
@@ -150,7 +152,7 @@ class _LandingPageState extends State<LandingPage> {
                         ),
                       ),
                       child: const Text(
-                        "Jooin Communication",
+                        "Join Communication",
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -167,6 +169,7 @@ class _LandingPageState extends State<LandingPage> {
                 child: Column(
                   children: [
                     FloatingActionButton(
+                      key: const Key('voice_button'),
                       backgroundColor: Colors.red,
                       elevation: 4,
                       onPressed: () => voiceVM.toggleListening(context),

@@ -159,6 +159,7 @@ class ChattingPageState extends State<ChattingPage> {
                   ),
                 ),
                 IconButton(
+                key: const Key("send_message_Button"),
                   icon: const Icon(Icons.send, color: Colors.white),
                   onPressed: () {
                     if (_ctrl.text.isNotEmpty) {
@@ -191,6 +192,7 @@ class ChattingPageState extends State<ChattingPage> {
 
   Widget MessageButton(String text) {
     return ElevatedButton(
+
       onPressed: () => null,//_sendPredefinedMessage(text),
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color.fromARGB(255, 48, 48, 48),
