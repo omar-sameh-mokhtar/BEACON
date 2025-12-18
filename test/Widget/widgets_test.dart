@@ -76,4 +76,63 @@ void main() {
       expect(fakeP2PVM.lastIsHost, false);
     },
   );
+  testWidgets(
+    'Pressing voice button starts listening',
+        (WidgetTester tester) async {
+
+      // Fix screen size
+      tester.binding.window.physicalSizeTestValue =
+      const Size(1080, 1920);
+      tester.binding.window.devicePixelRatioTestValue = 1.0;
+
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
+
+      final fakeVoiceVM = FakeVoiceViewModel();
+      final fakeP2PVM = FakeP2PViewModel();
+
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => const LandingPage(),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<P2PViewModel>.value(
+              value: fakeP2PVM,
+            ),
+            ChangeNotifierProvider<VoiceViewModel>.value(
+              value: fakeVoiceVM,
+            ),
+          ],
+          child: MaterialApp.router(
+            routerConfig: router,
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // BEFORE PRESS
+      expect(fakeVoiceVM.isListening, false);
+      expect(find.byIcon(Icons.mic_none), findsOneWidget);
+
+      // ACTION
+      await tester.tap(find.byKey(const Key('voice_button')));
+      await tester.pumpAndSettle();
+
+      // AFTER PRESS
+      expect(fakeVoiceVM.toggleCalled, true);
+      expect(fakeVoiceVM.isListening, true);
+      expect(find.byIcon(Icons.mic), findsOneWidget);
+    },
+  );
+
 }
