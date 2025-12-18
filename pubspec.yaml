@@ -40,7 +40,7 @@ dependencies:
   #sqflite: ^2.4.2
   sqflite_sqlcipher: ^3.4.0
   flutter_secure_storage: ^9.2.4
-  device_info_plus: ^10.1.0
+  device_info_plus: 9.1.2
 
   flutter_p2p_connection: ^3.0.2
 
