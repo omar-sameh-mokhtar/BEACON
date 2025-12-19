@@ -126,9 +126,6 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ),
       floatingActionButton: Floatingvoicebutton(centre: false),
-
-
-
     );
   }
 

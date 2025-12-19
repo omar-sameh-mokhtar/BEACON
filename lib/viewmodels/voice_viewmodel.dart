@@ -39,11 +39,14 @@ class VoiceViewModel extends ChangeNotifier {
     }
     else if(command.contains("resources")){
       _service.speak("Navigate to resources ");
+      toggleListening(context);
       context.go('/resources');
+
 
     }
     else if (command.contains("profile")) {
       _service.speak("Navigate to profile ");
+      toggleListening(context);
       context.go('/profile');
     }
 
