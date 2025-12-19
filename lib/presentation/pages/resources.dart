@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:beacon/model/data/Resource.dart';
+import 'package:beacon/model/service/resource_service.dart';
+import 'package:beacon/model/service/user_profile_service.dart';
+import 'package:beacon/presentation/pages/add_or_edit_resource_page.dart';
+import 'package:beacon/presentation/widgets/AppBarTop.dart';
+import 'package:beacon/presentation/widgets/NavigationBarBottom.dart';
+import 'package:beacon/presentation/widgets/FloatingVoiceButton.dart';
 import 'package:provider/provider.dart';
 
 import '../../viewmodels/resources_viewmodel.dart';
-import '../../model/data/Resource.dart';
-import '../widgets/AppBarTop.dart';
-import '../widgets/NavigationBarBottom.dart';
-import 'add_or_edit_resource_page.dart';
-
 class ResourcesPage extends StatefulWidget {
   const ResourcesPage({super.key});
 

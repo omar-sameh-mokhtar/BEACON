@@ -198,7 +198,7 @@ class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
           ],
         ),
       ),
-      floatingActionButton: Floatingvoicebutton(),
+      floatingActionButton: Floatingvoicebutton(centre: false),
       bottomNavigationBar: NavigationBarBottom(currentIndex: 0)
     );
   }

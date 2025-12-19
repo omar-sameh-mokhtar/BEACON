@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:beacon/model/data/UserProfile.dart';
 import 'package:beacon/model/service/user_profile_service.dart';
 import '../widgets/AppBarTop.dart';
+import '../widgets/FloatingVoiceButton.dart';
 import '../widgets/NavigationBarBottom.dart';
 import '../../model/Device.helper.dart';
 
@@ -124,6 +125,10 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
       ),
+      floatingActionButton: Floatingvoicebutton(centre: false),
+
+
+
     );
   }
 
@@ -153,9 +158,11 @@ class _ProfilePageState extends State<ProfilePage> {
               onPressed: () => setState(() => mode = ProfileMode.edit),
               child: const Text("Edit", style: TextStyle(color: Colors.red)),
             ),
+
         ],
       ),
     );
+
   }
 
   Widget _actionButton() {
