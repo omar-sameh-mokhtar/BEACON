@@ -22,7 +22,9 @@ class P2PViewModel extends ChangeNotifier {
   
   bool isHost = false;
   List<P2pClientInfo> peers = [];
-  List<String> chatHistory = [];
+  //List<String> chatHistory = [];
+  List<Message> currentChatMessages = [];
+  Map<String, Message?> lastMessages = {};
   String connectionStatus = "Disconnected";
   bool isActive = false;
   bool isConnecting = false;
@@ -174,6 +176,7 @@ class P2PViewModel extends ChangeNotifier {
 
         Message newMessage = Message(
           senderDeviceId: senderId,
+          receiverDeviceId: myId,
           messageType: "text",
           content: message,
           timestamp: DateTime.now().toIso8601String(),
@@ -182,7 +185,8 @@ class P2PViewModel extends ChangeNotifier {
 
         _messageDao.insertMessage(newMessage);
 
-        //chatHistory.insert(0, msg);
+        await refreshMessages(senderId);
+        updateLastMessageSummary(senderId);
 
         NotificationService.showAlert(
           "New Message",
@@ -190,7 +194,6 @@ class P2PViewModel extends ChangeNotifier {
           'chat_channel'
         );
       }
-      notifyListeners();
     });
   }
 
@@ -235,6 +238,7 @@ class P2PViewModel extends ChangeNotifier {
         String content = parts.sublist(1).join('|');
         Message newMessage = Message(
           senderDeviceId: myId,
+          receiverDeviceId: targetId,
           messageType: "text",
           content: content,
           timestamp: DateTime.now().toIso8601String(),
@@ -242,15 +246,24 @@ class P2PViewModel extends ChangeNotifier {
         );
       
         _messageDao.insertMessage(newMessage);
-      
-        notifyListeners();
+
+        await refreshMessages(targetId);
+        updateLastMessageSummary(targetId);
       }
     }
   }
 
-  // inside P2PViewModel
   Future<List<Message>> getAllSavedMessages() async {
     return await _messageDao.getAll();
+  }
+  Future<void> refreshMessages(String peerId) async {
+    currentChatMessages = await _messageDao.getChatHistory(myId, peerId);
+    notifyListeners();
+  }
+  Future<void> updateLastMessageSummary(String peerId) async {
+    final msg = await _messageDao.getLastMessageForPeer(myId, peerId);
+    lastMessages[peerId] = msg;
+    notifyListeners();
   }
 
   @override
@@ -274,7 +287,7 @@ class P2PViewModel extends ChangeNotifier {
       }
       
       peers = [];
-      chatHistory = [];
+      //chatHistory = [];
       isActive = false;
       connectionStatus = "Disconnected";
       isHost=false;

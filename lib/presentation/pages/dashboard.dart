@@ -150,6 +150,19 @@ class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
                 itemCount: p2pVM.peers.length,
                 itemBuilder: (context, i) {
                   final p = p2pVM.peers[i];
+                  final lastMsgObj = p2pVM.lastMessages[p.id];
+
+                  String lastMsgText = lastMsgObj?.content ?? "No messages yet";
+                  String lastSeenText = "Never";
+
+                  if (lastMsgObj != null) {
+                    final dt = DateTime.parse(lastMsgObj.timestamp);
+                    final diff = DateTime.now().difference(dt);
+                    
+                    if (diff.inMinutes < 1){ lastSeenText = "Just now";}
+                    else if (diff.inMinutes < 60){ lastSeenText = "${diff.inMinutes}m ago";}
+                    else{ lastSeenText = "${diff.inHours}h ago";}
+                  }
                   return Container(
                     margin: EdgeInsets.symmetric(vertical: 6),
                     decoration: BoxDecoration(
@@ -157,20 +170,22 @@ class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
                         borderRadius: BorderRadius.circular(10)),
                     child: ListTile(
                       leading: CircleAvatar(
-                          backgroundColor: Colors.red,
+                          backgroundColor: p.isHost! ? Colors.orange : Colors.red,
                           child: Icon(Icons.person, color: Colors.white)),
-                      title: Text(p.username!,
+                      title: Text(p.username,
                           style: TextStyle(
                               color: Colors.white, fontWeight: FontWeight.bold)),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(p2pVM.peers[i].isHost! ? "Host" : "Role: Client",
+                          Text(p.isHost! ? "Host" : "Client",
                               style: TextStyle(color: Colors.grey)),
-                          Text("Last seen: 3 min ago",
+                          Text("Last seen: $lastSeenText",
                               style: TextStyle(color: Colors.grey)),
-                          Text("Last msg: hey",
-                              style: TextStyle(color: Colors.grey))
+                          Text("Last msg: $lastMsgText",
+                              style: TextStyle(color: Colors.grey),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis),
                         ],
                       ),
                       trailing: Icon(Icons.chat_bubble_outline, color: Colors.red),

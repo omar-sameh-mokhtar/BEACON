@@ -39,4 +39,31 @@ class MessageDao {
       whereArgs: [id],
     );
   }
+
+  Future<List<Message>> getChatHistory(String myId, String peerId) async {
+    final database = await db.database;
+    
+    final List<Map<String, Object?>> result = await database.query(
+      'messages',
+      where: '(sender_device_id = ? AND receiver_device_id = ?) OR (sender_device_id = ? AND receiver_device_id = ?)',
+      whereArgs: [myId, peerId, peerId, myId],
+      orderBy: 'timestamp DESC',
+    );
+
+    return result.map((map) => Message.fromMap(map)).toList();
+  }
+
+  Future<Message?> getLastMessageForPeer(String myId, String peerId) async {
+    final database = await db.database;
+    final List<Map<String, Object?>> result = await database.query(
+      'messages',
+      where: '(sender_device_id = ? AND receiver_device_id = ?) OR (sender_device_id = ? AND receiver_device_id = ?)',
+      whereArgs: [myId, peerId, peerId, myId],
+      orderBy: 'timestamp DESC',
+      limit: 1,
+    );
+
+    if (result.isEmpty) return null;
+    return Message.fromMap(result.first);
+  }
 }
