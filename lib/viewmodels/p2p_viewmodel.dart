@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../model/service/notification_service.dart';
 import 'package:flutter_p2p_connection/flutter_p2p_connection.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:async';
 import '../model/service/p2p_service.dart';
 
@@ -121,6 +122,35 @@ class P2PViewModel extends ChangeNotifier {
     _peerSub?.cancel();
     _stateSub?.cancel();
     super.dispose();
+  }
+
+  Future<void> prepareAndNavigate(BuildContext context, bool isHost) async {
+    
+    // Check Permissions
+    if (!await _service.hostInterface.checkP2pPermissions()) {
+      //_updateLog("Requesting P2P permissions...");
+      await _service.hostInterface.askP2pPermissions();
+    }
+    if (!await _service.hostInterface.checkBluetoothPermissions()) {
+      //_updateLog("Requesting Bluetooth permissions...");
+      await _service.hostInterface.askBluetoothPermissions();
+    }
+
+    // Check Services
+    if (!await _service.hostInterface.checkLocationEnabled()) {
+      //_updateLog("Enabling Location...");
+      await _service.hostInterface.enableLocationServices();
+    }
+    if (!await _service.hostInterface.checkWifiEnabled()) {
+      //_updateLog("Enabling Wi-Fi...");
+      await _service.hostInterface.enableWifiServices();
+    }
+
+    if (!context.mounted) return;
+    
+    startGlobalEngine(isHost);
+    
+    context.goNamed('dashboard', pathParameters: {'isHost': '$isHost'});
   }
 
 

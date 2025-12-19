@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../model/service/voice_service.dart';
-import 'package:go_router/go_router.dart';
 import 'p2p_viewmodel.dart';
 
 class VoiceViewModel extends ChangeNotifier {
@@ -28,12 +27,15 @@ class VoiceViewModel extends ChangeNotifier {
 
   void _handleVoiceCommands(String command, BuildContext context) {
     
-    if (command.contains("start") || command.contains("communication")) {
+    if (command.contains("start")) {
       _service.speak("Starting communication");
-      context.goNamed('dashboard', pathParameters: {'isHost': '${p2pVM.isHost}'}); 
+      toggleListening(context);
+      p2pVM.prepareAndNavigate(context, true);
+      
     } else if (command.contains("join")) {
       _service.speak("Joining existing network");
-      context.goNamed('dashboard', pathParameters: {'isHost': '${p2pVM.isHost}'}); 
+      toggleListening(context);
+      p2pVM.prepareAndNavigate(context, false);
     }
   }
 }
