@@ -1,16 +1,32 @@
 
 import 'package:flutter/material.dart';
+import '../../viewmodels/voice_viewmodel.dart';
+import 'package:provider/provider.dart';
 
 class Floatingvoicebutton extends StatelessWidget{
 
-  
+  final bool centre;
+  const Floatingvoicebutton({super.key, required this.centre});
 
   @override
   Widget build(BuildContext context) {
-    return FloatingActionButton(
-      onPressed: (){},
-      backgroundColor: Colors.red,
-      child: const Icon(Icons.mic, color: Colors.white),
-    );
+    final voiceVM = Provider.of<VoiceViewModel>(context);
+    if(!centre) {
+      return FloatingActionButton(
+        onPressed: () {},
+        backgroundColor: Colors.red,
+        child: const Icon(Icons.mic, color: Colors.white),
+
+      );
+    }
+    else{
+      return Center(
+        child: FloatingActionButton(
+          onPressed: () {voiceVM.toggleListening(context);},
+          backgroundColor: Colors.red,
+          child: const Icon(Icons.mic, color: Colors.white),
+      )
+      );
+    }
   }
 }

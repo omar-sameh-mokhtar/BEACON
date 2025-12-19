@@ -5,7 +5,7 @@ import 'package:beacon/model/service/user_profile_service.dart';
 import 'package:beacon/presentation/pages/add_or_edit_resource_page.dart';
 import 'package:beacon/presentation/widgets/AppBarTop.dart';
 import 'package:beacon/presentation/widgets/NavigationBarBottom.dart';
-
+import 'package:beacon/presentation/widgets/FloatingVoiceButton.dart';
 class ResourcesPage extends StatefulWidget {
   const ResourcesPage({super.key});
 
@@ -73,6 +73,9 @@ class _ResourcesPageState extends State<ResourcesPage> {
           Expanded(child: _buildContent()),
         ],
       ),
+
+
+
     );
   }
 
