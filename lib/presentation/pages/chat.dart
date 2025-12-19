@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_p2p_connection/flutter_p2p_connection.dart';
 import 'dart:async';
 import '../../model/service/p2p_service.dart';
+import '../../model/data/Message.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/p2p_viewmodel.dart';
 
@@ -99,6 +100,30 @@ class ChattingPageState extends State<ChattingPage> {
                 ],
               ),
             ),
+          ),
+          // Inside ChattingPageState's build method
+// ... inside the Column, above the Expanded list ...
+
+          FutureBuilder<List<Message>>(
+            future: vm.getAllSavedMessages(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const Text("Loading DB...", style: TextStyle(color: Colors.white));
+              
+              final dbMsgs = snapshot.data!;
+              return Container(
+                height: 100, // Fixed height for debug area
+                color: Colors.blueGrey.withOpacity(0.3),
+                child: ListView(
+                  children: [
+                    Text("DB COUNT: ${dbMsgs.length}", style: TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
+                    ...dbMsgs.map((m) => Text(
+                      "[DB] ${m.senderDeviceId}: ${m.content}",
+                      style: const TextStyle(color: Colors.greenAccent, fontSize: 10),
+                    )).toList(),
+                  ],
+                ),
+              );
+            },
           ),
           SizedBox(height: height_ * 0.01),
           Expanded(

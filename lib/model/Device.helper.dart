@@ -7,7 +7,7 @@ class DeviceIdHelper {
 
     if (Platform.isAndroid) {
       final android = await deviceInfo.androidInfo;
-      return android.id ?? android.device;
+      return android.id;
     }
     return 'unknown-device';
   }

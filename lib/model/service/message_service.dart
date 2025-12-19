@@ -18,17 +18,7 @@ class MessageDao {
     final database = await db.database;
     final List<Map<String, Object?>> result = await database.query('messages');
 
-    return [
-      for(final {'id': id as int, 'sender_device_id': senderDeviceId as String, 'message_type': messageType as String, 'content': content as String, 'timestamp': timestamp as String, 'delivered': delivered as int} in result)
-        Message(
-          id: id,
-          senderDeviceId: senderDeviceId,
-          messageType: messageType,
-          content: content,
-          timestamp: timestamp,
-          delivered: delivered,
-        )
-    ];
+    return result.map((map) => Message.fromMap(map)).toList();
   }
 
   Future<void> updateMessage(Message message) async {
