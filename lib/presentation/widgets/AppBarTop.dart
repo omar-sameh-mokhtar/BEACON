@@ -17,6 +17,7 @@ class AppBarTop extends StatelessWidget implements PreferredSizeWidget{
     final isDark = themeProvider.isDarkMode;
 
     return AppBar(
+      key: const Key('app_bar'),
       backgroundColor: Colors.black,
       elevation: 0,
       title: Text(title,
