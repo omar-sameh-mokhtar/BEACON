@@ -7,6 +7,7 @@ import 'package:beacon/presentation/widgets/AppBarTop.dart';
 import 'package:beacon/presentation/widgets/NavigationBarBottom.dart';
 import 'package:beacon/presentation/widgets/FloatingVoiceButton.dart';
 
+import '../../viewmodels/p2p_viewmodel.dart';
 import '../../viewmodels/resources_viewmodel.dart';
 
 class ResourcesPage extends StatefulWidget {
@@ -28,6 +29,14 @@ class _ResourcesPageState extends State<ResourcesPage> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<ResourcesViewModel>();
+    final p2pVM = context.watch<P2PViewModel>();
+
+    final bool amIHost = p2pVM.isHost;
+    final String networkStatus = p2pVM.connectionStatus;
+    final int peerCount = p2pVM.peers.length;
+
+
+    debugPrint("Current Status: $networkStatus, ishost : $amIHost, peercount : $peerCount");
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -97,7 +106,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
                     ),
                   ),
                 ),
-                child: Column(
+                child: Column(  
                   children: [
                     Icon(
                       _tabIcon(index),
