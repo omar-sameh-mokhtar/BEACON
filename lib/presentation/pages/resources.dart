@@ -20,7 +20,6 @@ class _ResourcesPageState extends State<ResourcesPage> {
   @override
   void initState() {
     super.initState();
-    // Use a post-frame callback to safely access the context.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ResourcesViewModel>().init();
     });
@@ -34,7 +33,6 @@ class _ResourcesPageState extends State<ResourcesPage> {
       backgroundColor: Colors.black,
       appBar: AppBarTop(title: "Resources"),
       bottomNavigationBar: const NavigationBarBottom(currentIndex: 2),
-      // The FloatingActionButton has been removed from here.
       body: Column(
         children: [
           _buildTabs(vm),
@@ -170,7 +168,6 @@ class _ResourcesPageState extends State<ResourcesPage> {
                 child: Padding(
                   padding: const EdgeInsets.only(top: 2.0),
                   child: Text(
-                    // FIX: Check if owner is not null/empty before displaying
                     item.isMine
                         ? 'My Resource'
                         : 'From ${item.owner != null && item.owner!.isNotEmpty ? item.owner! : 'Anonymous'}',
@@ -209,7 +206,6 @@ class _ResourcesPageState extends State<ResourcesPage> {
                       constraints: const BoxConstraints(),
                       icon: const Icon(Icons.delete, color: Colors.white, size: 20),
                       onPressed: () {
-                        // Optional: Show a confirmation dialog
                         vm.deleteResource(item.id);
                       },
                     ),

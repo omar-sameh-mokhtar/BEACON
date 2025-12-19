@@ -29,4 +29,19 @@ class UserProfile {
     'updated_at': updatedAt,
     'image_path': imagePath,
   };
+
+  UserProfile? copyWith({required String name1, required String phone, required String bloodType, required String updatedAt}) {
+    return UserProfile(
+      id: id,
+      deviceId: deviceId,
+      name: name1,
+      phone: phone,
+      bloodType: bloodType,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      imagePath: imagePath
+    );
+  }
+
+
 }
