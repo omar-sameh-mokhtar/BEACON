@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/voice_viewmodel.dart';
 import '../../viewmodels/p2p_viewmodel.dart';
+import 'package:go_router/go_router.dart';
+
 import '../widgets/FloatingVoiceButton.dart';
 //final FlutterP2pHost hostInterface = FlutterP2pHost();
 //final FlutterP2pClient clientInterface = FlutterP2pClient();
@@ -83,7 +85,8 @@ class _LandingPageState extends State<LandingPage> {
                     ElevatedButton(
                       key: const Key('start_button'),
                       onPressed: () {
-                        p2pVM.prepareAndNavigate(context, true);
+                        p2pVM.initP2P(context, true);
+                        context.goNamed('dashboard', pathParameters: {'isHost': '${p2pVM.isHost}'});
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
@@ -106,7 +109,8 @@ class _LandingPageState extends State<LandingPage> {
                     ElevatedButton(
                       key: const Key('join_button'),
                       onPressed: () {
-                        p2pVM.prepareAndNavigate(context, false);
+                        p2pVM.initP2P(context, false);
+                        context.goNamed('dashboard', pathParameters: {'isHost': '${p2pVM.isHost}'});
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color.fromARGB(255, 14, 15, 19),

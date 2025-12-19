@@ -30,17 +30,23 @@ class VoiceViewModel extends ChangeNotifier {
     if (command.contains("start")) {
       _service.speak("Starting communication");
       toggleListening(context);
-      p2pVM.prepareAndNavigate(context, true);
+      //p2pVM.prepareAndNavigate(context, true);
       
     } else if (command.contains("join")) {
       _service.speak("Joining existing network");
       toggleListening(context);
-      p2pVM.prepareAndNavigate(context, false);
+      //p2pVM.prepareAndNavigate(context, false);
     }
     else if(command.contains("resources")){
+      _service.speak("Navigate to resources ");
+      toggleListening(context);
       context.go('/resources');
+
+
     }
     else if (command.contains("profile")) {
+      _service.speak("Navigate to profile ");
+      toggleListening(context);
       context.go('/profile');
     }
 

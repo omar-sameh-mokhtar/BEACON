@@ -31,7 +31,7 @@ class AppBarTop extends StatelessWidget implements PreferredSizeWidget{
             themeProvider.toggleTheme();
           },
         ),
-        Icon(Icons.settings, color: Colors.white),
+        //Icon(Icons.settings, color: Colors.white),
         SizedBox(width: 10),
       ],
     );

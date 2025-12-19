@@ -16,4 +16,15 @@ class DeviceMapper {
       isConnected: false,
     );
   }
+
+  static Device fromP2PClient(P2pClientInfo info) {
+    return Device(
+      deviceId: info.id,
+      name: info.username,
+      lastSeen: DateTime.now().toIso8601String(),
+      firstDiscovered: DateTime.now().toIso8601String(),
+      connectionStatus: "connected",
+      isConnected: true,
+    );
+  }
 }
