@@ -1,27 +1,38 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../fakes/fake_voice_viewmodel.dart';
+import 'package:flutter/widgets.dart';
+
+import '../fakes/spy_voice_viewmodel.dart';
 import '../fakes/fake_build_context.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('VoiceViewModel Unit Tests', () {
     test('toggleListening turns listening ON', () {
-      final vm = FakeVoiceViewModel();
+      // ARRANGE
+      final vm = SpyVoiceViewModel();
       final context = FakeBuildContext();
 
       expect(vm.isListening, false);
 
+      // ACT
       vm.toggleListening(context);
 
+      // ASSERT
       expect(vm.isListening, true);
+      expect(vm.toggleCalled, true);
     });
 
     test('toggleListening turns listening OFF', () {
-      final vm = FakeVoiceViewModel();
+      // ARRANGE
+      final vm = SpyVoiceViewModel();
       final context = FakeBuildContext();
 
-      vm.toggleListening(context);
-      vm.toggleListening(context);
+      // ACT
+      vm.toggleListening(context); // ON
+      vm.toggleListening(context); // OFF
 
+      // ASSERT
       expect(vm.isListening, false);
     });
   });

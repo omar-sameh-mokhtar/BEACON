@@ -13,7 +13,7 @@ import '../fakes/fake_network_dashboard.dart';
 
 void main() {
   testWidgets(
-    'Join Communication navigates to Network Dashboard (Client)',
+    'Start Communication navigates to Network Dashboard (Host)',
         (WidgetTester tester) async {
       // ---------- Screen size fix ----------
       tester.binding.window.physicalSizeTestValue =
@@ -67,15 +67,15 @@ void main() {
       await tester.pumpAndSettle();
 
       // ---------- Action ----------
-      expect(find.byKey(const Key('join_button')), findsOneWidget);
+      expect(find.byKey(const Key('start_button')), findsOneWidget);
 
-      await tester.tap(find.byKey(const Key('join_button')));
+      await tester.tap(find.byKey(const Key('start_button')));
       await tester.pumpAndSettle();
 
       // ---------- Assert ----------
       expect(find.byKey(const Key('dashboard_page')), findsOneWidget);
-      expect(find.text('CLIENT DASHBOARD'), findsOneWidget);
-      expect(fakeP2PVM.lastIsHost, false);
+      expect(find.text('HOST DASHBOARD'), findsOneWidget);
+      expect(fakeP2PVM.lastIsHost, true);
     },
   );
 }
