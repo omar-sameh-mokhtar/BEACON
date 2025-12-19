@@ -71,6 +71,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
           ),
         ],
       ),
+      floatingActionButton: Floatingvoicebutton(centre: false),
     );
   }
 

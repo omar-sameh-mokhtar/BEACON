@@ -13,6 +13,7 @@ class Floatingvoicebutton extends StatelessWidget{
     final voiceVM = Provider.of<VoiceViewModel>(context);
     if(!centre) {
       return FloatingActionButton(
+        key: const Key('voice_button'),
         onPressed: () {voiceVM.toggleListening(context);},
         backgroundColor: Colors.red,
         child: const Icon(Icons.mic, color: Colors.white),
@@ -22,6 +23,7 @@ class Floatingvoicebutton extends StatelessWidget{
     else{
       return Center(
         child: FloatingActionButton(
+          key: const Key('Centre_voice_button'),
           onPressed: () {voiceVM.toggleListening(context);},
           backgroundColor: Colors.red,
           child: const Icon(Icons.mic, color: Colors.white),
