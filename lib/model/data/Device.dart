@@ -2,10 +2,8 @@ class Device {
   final int? id;
   final String deviceId;
   final String name;
-
   final String lastSeen;          // ISO Date
   final String firstDiscovered;   // ISO Date
-
   final String connectionStatus;  // idle | hosting | connected
   final bool isConnected;
 
@@ -19,7 +17,6 @@ class Device {
     required this.isConnected,
   });
 
-  /// SQLite → Object
   Map<String, Object?> toMap() {
     return {
       'id': id,
@@ -42,24 +39,6 @@ class Device {
       firstDiscovered: map['first_discovered'] as String,
       connectionStatus: map['connection_status'] as String,
       isConnected: (map['is_connected'] as int) == 1,
-    );
-  }
-
-  /// Update safely
-  Device copyWith({
-    String? name,
-    String? lastSeen,
-    String? connectionStatus,
-    bool? isConnected,
-  }) {
-    return Device(
-      id: id,
-      deviceId: deviceId,
-      name: name ?? this.name,
-      lastSeen: lastSeen ?? this.lastSeen,
-      firstDiscovered: firstDiscovered,
-      connectionStatus: connectionStatus ?? this.connectionStatus,
-      isConnected: isConnected ?? this.isConnected,
     );
   }
 

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:flutter_p2p_connection/flutter_p2p_connection.dart';
 
 class P2PService {
@@ -28,6 +27,9 @@ class P2PService {
     if (!await hostInterface.checkWifiEnabled()) {
       await hostInterface.enableWifiServices();
     }
+    if (!await hostInterface.checkBluetoothEnabled()) {
+    await hostInterface.enableBluetoothServices();
+  }
   }
 
   Stream<String> getMessageStream(bool isHost) {
@@ -36,7 +38,6 @@ class P2PService {
         : clientInterface.streamReceivedTexts();
   }
 
-  // Helper for status streams
   Stream<List<P2pClientInfo>> getPeerStream(bool isHost) {
     return isHost 
         ? hostInterface.streamClientList() 

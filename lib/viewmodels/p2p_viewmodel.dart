@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import '../model/service/notification_service.dart';
 import 'package:flutter_p2p_connection/flutter_p2p_connection.dart';
-import 'package:go_router/go_router.dart';
 import 'dart:async';
 import '../model/service/p2p_service.dart';
+import '../model/service/connected_device_service.dart';
+import 'package:collection/collection.dart';
 
 class P2PViewModel extends ChangeNotifier {
   final P2PService _service = P2PService();
+  final ConnectedDeviceDao _deviceDao = ConnectedDeviceDao();
   get service => _service;
   
   bool isHost = false;
@@ -15,12 +17,28 @@ class P2PViewModel extends ChangeNotifier {
   String connectionStatus = "Disconnected";
   bool isActive = false;
   bool isConnecting = false;
+  int count=0;
   
   StreamSubscription? _msgSub;
   StreamSubscription? _peerSub;
   StreamSubscription? _stateSub;
 
-  void startGlobalEngine(bool isHost) async {
+  Future<void> initP2P(BuildContext context, bool newHost) async {
+
+    if(isActive && !isHost && !newHost) return; // Already connected as client and pressed join again -> navigate back without changes
+    if(isActive){ 
+      await disconnect(isHost);
+    }
+    _service.ensurePermissions();
+    _service.ensureServices();
+
+    if (!context.mounted) return;
+    
+    startP2P(newHost);
+    
+  }
+
+  void startP2P(bool isHost) async {
     this.isHost = isHost;
     if (isHost) {
       await _service.initHost();
@@ -36,7 +54,7 @@ class P2PViewModel extends ChangeNotifier {
   void _setupHostStreams() {
     _stateSub = _service.hostInterface.streamHotspotState().listen((state) {
       isActive = state.isActive;
-      connectionStatus = state.isActive ? "Hosting: ${state.ssid}" : "Error: ${state.failureReason}";
+      connectionStatus = state.isActive ? "Hosting: ${state.ssid}" : "Hosting...";
       notifyListeners();
     });
     _listenForPeers(true);
@@ -46,7 +64,7 @@ class P2PViewModel extends ChangeNotifier {
   void _setupClientStreams() {
     _stateSub = _service.clientInterface.streamHotspotState().listen((state) {
       isActive = state.isActive;
-      connectionStatus = state.isActive ? "Connected" : "Searching...";
+      connectionStatus = state.isActive ? "Connected" : "Disconnected";
       if (state.isActive) isConnecting = false;
       notifyListeners();
     });
@@ -54,17 +72,47 @@ class P2PViewModel extends ChangeNotifier {
     _listenForMessages(false);
   }
 
+  
+
   void _listenForPeers(bool isHost) {
-    _peerSub = _service.getPeerStream(isHost).listen((list) {
-      peers = list;
-      notifyListeners();
-    });
+
+    final listEquals = const IterableEquality().equals;
+
+    _peerSub = _service
+      .getPeerStream(isHost)
+      .distinct((prev, next) => listEquals(prev, next))
+      .listen((list) {
+        if (list.length > peers.length) {
+          final joiner = list.firstWhere(
+          (n) => !peers.any((p) => p.id == n.id),
+          //orElse: () => list.last,
+        );
+          NotificationService.showAlert(
+            "Network Update", 
+            "${joiner.username} has joined.", 
+            'client_channel'
+          );
+        } 
+        else if (list.length < peers.length) {
+          final leaver = peers.firstWhere(
+          (p) => !list.any((n) => n.id == p.id),
+          orElse: () => peers.first,
+        );
+          NotificationService.showAlert(
+            "Network Update", 
+            "${leaver.username} has left the network.", 
+            'client_channel'
+          );
+        }
+
+        peers = list;
+        notifyListeners();
+      });
   }
 
   void _listenForMessages(bool isHost) {
     _msgSub = _service.getMessageStream(isHost).listen((msg) {
-      print("[DEBUG] P2P Packet Received: '$msg'");
-      // Logic for different modules based on prefixes
+      
       if (msg.startsWith("REQ:")) {
         NotificationService.showAlert(
           "Resource Request",
@@ -87,16 +135,18 @@ class P2PViewModel extends ChangeNotifier {
     connectionStatus = "Scanning for networks...";
     notifyListeners();
 
-    await _service.clientInterface.startScan((devices) {
+    await _service.clientInterface.startScan((devices) async {
       if (devices.isNotEmpty && !isActive && !isConnecting) {
         isConnecting = true;
         final target = devices.first;
         connectionStatus = "Auto-joining ${target.deviceName}...";
         notifyListeners();
         
-        _service.clientInterface.stopScan().then((_) {
+        await _service.clientInterface.stopScan();//.then((_) {
           _service.clientInterface.connectWithDevice(target);
-        });
+        
+        isConnecting = false;
+        //});
       }
     });
   }
@@ -106,8 +156,7 @@ class P2PViewModel extends ChangeNotifier {
     if (isHost) {
       ok = await _service.hostInterface.sendTextToClient(text, targetId);
     } else {
-      await _service.clientInterface.broadcastText(text);
-      ok = true; 
+      ok = await _service.clientInterface.sendTextToClient(text, targetId); 
     }
 
     if (ok) {
@@ -124,33 +173,34 @@ class P2PViewModel extends ChangeNotifier {
     super.dispose();
   }
 
-  Future<void> prepareAndNavigate(BuildContext context, bool isHost) async {
+  Future<void> disconnect(bool isHost) async {
     
-    // Check Permissions
-    if (!await _service.hostInterface.checkP2pPermissions()) {
-      //_updateLog("Requesting P2P permissions...");
-      await _service.hostInterface.askP2pPermissions();
-    }
-    if (!await _service.hostInterface.checkBluetoothPermissions()) {
-      //_updateLog("Requesting Bluetooth permissions...");
-      await _service.hostInterface.askBluetoothPermissions();
-    }
-
-    // Check Services
-    if (!await _service.hostInterface.checkLocationEnabled()) {
-      //_updateLog("Enabling Location...");
-      await _service.hostInterface.enableLocationServices();
-    }
-    if (!await _service.hostInterface.checkWifiEnabled()) {
-      //_updateLog("Enabling Wi-Fi...");
-      await _service.hostInterface.enableWifiServices();
-    }
-
-    if (!context.mounted) return;
+      if (isHost) {
+        await _service.hostInterface.removeGroup();
+        await _service.hostInterface.dispose();
+        //print("[DEBUG] Host: Group removed and disconnected.");
+      } else {
+        await _service.clientInterface.stopScan();
+        await _service.clientInterface.disconnect();
+        await _service.clientInterface.dispose();
+      }
+      
+      peers = [];
+      chatHistory = [];
+      isActive = false;
+      connectionStatus = "Disconnected";
+      isHost=false;
+      isConnecting=false;
+      
+      _msgSub?.cancel();
+      _peerSub?.cancel();
+      _stateSub?.cancel();
+      _msgSub = null;
+      _peerSub = null;
+      _stateSub = null;
+      
+      notifyListeners();
     
-    startGlobalEngine(isHost);
-    
-    context.goNamed('dashboard', pathParameters: {'isHost': '$isHost'});
   }
 
 
