@@ -37,10 +37,13 @@ class VoiceViewModel extends ChangeNotifier {
       toggleListening(context);
       p2pVM.prepareAndNavigate(context, false);
     }
-    else if(command.contains("Resources")){
+    else if(command.contains("resources")){
+      _service.speak("Navigate to resources ");
       context.go('/resources');
+
     }
     else if (command.contains("profile")) {
+      _service.speak("Navigate to profile ");
       context.go('/profile');
     }
 
