@@ -8,6 +8,7 @@ class P2PViewModel extends ChangeNotifier {
   final P2PService _service = P2PService();
   get service => _service;
   
+  bool isHost = false;
   List<P2pClientInfo> peers = [];
   List<String> chatHistory = [];
   String connectionStatus = "Disconnected";
@@ -19,6 +20,7 @@ class P2PViewModel extends ChangeNotifier {
   StreamSubscription? _stateSub;
 
   void startGlobalEngine(bool isHost) async {
+    this.isHost = isHost;
     if (isHost) {
       await _service.initHost();
       _setupHostStreams();

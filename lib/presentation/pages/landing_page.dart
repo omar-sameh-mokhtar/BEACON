@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/voice_viewmodel.dart';
-import 'package:flutter_p2p_connection/flutter_p2p_connection.dart';
 import 'dart:async';
 import '../../viewmodels/p2p_viewmodel.dart';
 
@@ -177,7 +176,7 @@ class _LandingPageState extends State<LandingPage> {
                     ),
                     const SizedBox(height: 14),
                     Text(
-                      voiceVM.isListening ? "Listening..." :"Pres to start voice communication",
+                      voiceVM.isListening ? "Listening..." :"Press to start voice communication",
                       style: TextStyle(
                         color: Colors.white70,
                         fontSize: 14,
