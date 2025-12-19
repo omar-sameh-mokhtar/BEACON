@@ -1,5 +1,5 @@
 class Message {
-  final int id;
+  final int? id;
   final String senderDeviceId;
   final String messageType;
   final String content;
@@ -7,7 +7,7 @@ class Message {
   final int delivered; 
 
   Message({
-    required this.id,
+    this.id,
     required this.senderDeviceId,
     required this.messageType,
     required this.content,
@@ -24,6 +24,17 @@ class Message {
       'timestamp': timestamp,
       'delivered': delivered,
     };
+  }
+
+  factory Message.fromMap(Map<String, Object?> map) {
+    return Message(
+      id: map['id'] as int,
+      senderDeviceId: map['sender_device_id'] as String,
+      messageType: map['message_type'] as String,
+      content: map['content'] as String,
+      timestamp: map['timestamp'] as String,
+      delivered: map['delivered'] as int,
+    );
   }
 
   @override

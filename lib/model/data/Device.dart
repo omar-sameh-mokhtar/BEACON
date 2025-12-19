@@ -1,5 +1,5 @@
 class Device {
-  final int? id;
+  final String? id;
   final String deviceId;
   final String name;
   final String lastSeen;          // ISO Date
@@ -32,7 +32,7 @@ class Device {
   /// SQLite → Model
   factory Device.fromMap(Map<String, Object?> map) {
     return Device(
-      id: map['id'] as int?,
+      id: map['id'] as String?,
       deviceId: map['device_id'] as String,
       name: map['name'] as String,
       lastSeen: map['last_seen'] as String,

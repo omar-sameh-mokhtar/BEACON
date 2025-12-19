@@ -18,6 +18,14 @@ class ResourcesViewModel extends ChangeNotifier {
             (e) => e.resourceType == tabs[currentTab],
       ).toList();
 
+
+  List<Resource> get allResources => _allResources;
+
+  void replaceAll(List<Resource> list) {
+    _allResources = list;
+    notifyListeners();
+  }
+
   Future<void> init() async {
     isLoading = true;
     notifyListeners();

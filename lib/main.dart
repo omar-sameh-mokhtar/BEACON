@@ -1,6 +1,7 @@
 import 'package:beacon/presentation/pages/chat.dart';
 import 'package:beacon/presentation/pages/dashboard.dart';
 import 'package:beacon/presentation/pages/resources.dart';
+import 'package:beacon/viewmodels/ProfileViewModel.dart';
 import 'package:beacon/viewmodels/add_edit_resource_viewmodel.dart';
 import 'package:beacon/viewmodels/resources_viewmodel.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +27,8 @@ void main() {
         ChangeNotifierProvider(create: (_) => ResourcesViewModel()),
         ChangeNotifierProvider(
             create: (_) => AddEditResourceViewModel()),
+        ChangeNotifierProvider(
+            create: (_) => ProfileViewModel()),
       ],
       child: const MyApp(),
     ),

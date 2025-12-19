@@ -73,4 +73,30 @@ class Resource {
       timestamp: DateTime.now().toIso8601String(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'resourceType': resourceType,
+    'quantity': quantity,
+    'note': note,
+    'requesterId': requesterId,
+    'owner': owner,
+    'status': status,
+    'isRequested': isRequested,
+  };
+
+
+  factory Resource.fromJson(Map<String, dynamic> json) => Resource(
+    id: json['id'],
+    resourceType: json['resourceType'],
+    quantity: json['quantity'],
+    note: json['note'],
+    requesterId: json['requesterId'],
+    owner: json['owner'],
+    status: json['status'],
+    isRequested: json['isRequested'], isMine: false, timestamp: '',
+  );
+
+
+
 }

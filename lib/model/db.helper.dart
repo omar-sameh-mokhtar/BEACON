@@ -59,13 +59,13 @@ class DatabaseHelper {
 
     await db.execute('''
       CREATE TABLE connected_devices (
-        id INTEGER PRIMARY KEY,
+        id TEXT PRIMARY KEY,
         device_id TEXT,
         name TEXT,
         last_seen TEXT,
         connection_status TEXT,
-        signal_strength INTEGER,
-        first_discovered TEXT
+        first_discovered TEXT,
+        is_connected INTEGER
       )
     ''');
 

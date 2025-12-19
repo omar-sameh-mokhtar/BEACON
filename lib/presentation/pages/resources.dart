@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import 'package:beacon/model/data/Resource.dart';
-import 'package:beacon/model/service/resource_service.dart';
-import 'package:beacon/model/service/user_profile_service.dart';
 import 'package:beacon/presentation/pages/add_or_edit_resource_page.dart';
 import 'package:beacon/presentation/widgets/AppBarTop.dart';
 import 'package:beacon/presentation/widgets/NavigationBarBottom.dart';
 import 'package:beacon/presentation/widgets/FloatingVoiceButton.dart';
-import 'package:provider/provider.dart';
 
+import '../../viewmodels/p2p_viewmodel.dart';
 import '../../viewmodels/resources_viewmodel.dart';
+
 class ResourcesPage extends StatefulWidget {
   const ResourcesPage({super.key});
 
@@ -20,7 +21,6 @@ class _ResourcesPageState extends State<ResourcesPage> {
   @override
   void initState() {
     super.initState();
-    // Use a post-frame callback to safely access the context.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ResourcesViewModel>().init();
     });
@@ -29,15 +29,25 @@ class _ResourcesPageState extends State<ResourcesPage> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<ResourcesViewModel>();
+    final p2pVM = context.watch<P2PViewModel>();
+
+    final bool amIHost = p2pVM.isHost;
+    final String networkStatus = p2pVM.connectionStatus;
+    final int peerCount = p2pVM.peers.length;
+
+
+    debugPrint("Current Status: $networkStatus, ishost : $amIHost, peercount : $peerCount");
 
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBarTop(title: "Resources"),
       bottomNavigationBar: const NavigationBarBottom(currentIndex: 2),
-      // The FloatingActionButton has been removed from here.
+      floatingActionButton: Floatingvoicebutton(centre: false),
+
       body: Column(
         children: [
           _buildTabs(vm),
+
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: ElevatedButton.icon(
@@ -64,6 +74,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
               },
             ),
           ),
+
           Expanded(
             child: vm.isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -75,12 +86,14 @@ class _ResourcesPageState extends State<ResourcesPage> {
     );
   }
 
+
   Widget _buildTabs(ResourcesViewModel vm) {
     return Container(
       color: Colors.grey[900],
       child: Row(
         children: List.generate(vm.tabs.length, (index) {
           final selected = vm.currentTab == index;
+
           return Expanded(
             child: InkWell(
               onTap: () => vm.changeTab(index),
@@ -94,8 +107,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
                     ),
                   ),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Column(  
                   children: [
                     Icon(
                       _tabIcon(index),
@@ -107,7 +119,8 @@ class _ResourcesPageState extends State<ResourcesPage> {
                       style: TextStyle(
                         color: selected ? Colors.red : Colors.white70,
                         fontSize: 12,
-                        fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                        fontWeight:
+                        selected ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                   ],
@@ -119,6 +132,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
       ),
     );
   }
+
 
   Widget _buildList(ResourcesViewModel vm) {
     if (vm.filteredResources.isEmpty) {
@@ -140,6 +154,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
     );
   }
 
+
   Widget _buildCard(
       BuildContext context,
       ResourcesViewModel vm,
@@ -151,45 +166,40 @@ class _ResourcesPageState extends State<ResourcesPage> {
       decoration: BoxDecoration(
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.red,
-        ),
+        border: Border.all(color: Colors.red),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(
-                item.isMine ? Icons.person : Icons.volunteer_activism,
+                item.isMine
+                    ? Icons.person
+                    : Icons.volunteer_activism,
                 color: Colors.red,
                 size: 20,
               ),
               const SizedBox(width: 8),
+
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 2.0),
-                  child: Text(
-                    // FIX: Check if owner is not null/empty before displaying
-                    item.isMine
-                        ? 'My Resource'
-                        : 'From ${item.owner != null && item.owner!.isNotEmpty ? item.owner! : 'Anonymous'}',
-                    style: TextStyle(
-                      color: Colors.red ,
-                      fontWeight: FontWeight.bold,
-                    ),
+                child: Text(
+                  item.isMine && false
+                      ? 'My Resource'
+                      : 'From ${item.owner?.isNotEmpty == true ? item.owner! : 'Anonymous'}',
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
+
               if (item.isMine)
                 Row(
                   children: [
                     IconButton(
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.all(4),
-                      constraints: const BoxConstraints(),
-                      icon: const Icon(Icons.edit, color: Colors.white, size: 20),
+                      icon: const Icon(Icons.edit,
+                          color: Colors.white, size: 20),
                       onPressed: () async {
                         final res = await Navigator.push(
                           context,
@@ -203,14 +213,10 @@ class _ResourcesPageState extends State<ResourcesPage> {
                         if (res == true) vm.refresh();
                       },
                     ),
-                    const SizedBox(width: 8),
                     IconButton(
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.all(4),
-                      constraints: const BoxConstraints(),
-                      icon: const Icon(Icons.delete, color: Colors.white, size: 20),
+                      icon: const Icon(Icons.delete,
+                          color: Colors.white, size: 20),
                       onPressed: () {
-                        // Optional: Show a confirmation dialog
                         vm.deleteResource(item.id);
                       },
                     ),
@@ -218,32 +224,140 @@ class _ResourcesPageState extends State<ResourcesPage> {
                 ),
             ],
           ),
+
           const SizedBox(height: 12),
+
           Text(
             item.note,
             style: const TextStyle(color: Colors.white, fontSize: 16),
           ),
+
           const SizedBox(height: 8),
+
           Text(
             'Quantity: ${item.quantity}',
-            style: const TextStyle(color: Colors.white70, fontSize: 14),
+            style: const TextStyle(color: Colors.white70),
           ),
-          if (!item.isMine) ...[
-            const SizedBox(height: 12),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[700],
+
+          if (item.isMine) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.withOpacity(0.85),
+                  foregroundColor: Colors.white,
+                ),
+                icon: const Icon(Icons.send),
+                label: const Text('Request Resource'),
+                onPressed: () {
+                  _showRequestDialog(context, vm, item);
+                },
               ),
-              onPressed: () {
-                // TODO: feature later
-              },
-              child: const Text('Action'),
             ),
-          ]
+          ],
         ],
       ),
     );
   }
+
+
+  void _showRequestDialog(
+      BuildContext context,
+      ResourcesViewModel vm,
+      Resource resource,
+      ) {
+    final controller = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (_) {
+        return Dialog(
+          backgroundColor: Colors.grey[900],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Request Resource',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                Text(
+                  resource.note,
+                  style: const TextStyle(color: Colors.white70),
+                ),
+
+                const SizedBox(height: 16),
+
+                TextField(
+                  controller: controller,
+                  maxLines: 3,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    hintText: 'Add a message (optional)',
+                    hintStyle: TextStyle(color: Colors.white38),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.red),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide:
+                      BorderSide(color: Colors.red, width: 2),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () =>
+                            Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          side:
+                          const BorderSide(color: Colors.grey),
+                        ),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                        ),
+                        onPressed: () {
+                          // vm.requestResource(resource, controller.text);
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Send'),
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
 
   IconData _tabIcon(int i) {
     if (i == 0) return Icons.medical_services;

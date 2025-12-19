@@ -6,6 +6,11 @@ class P2PService {
   final FlutterP2pHost hostInterface = FlutterP2pHost();
   final FlutterP2pClient clientInterface = FlutterP2pClient();
 
+
+  int getClientLength(){
+    return hostInterface.clientList.length;
+  }
+
   Future<void> initHost() async => await hostInterface.initialize();
   Future<void> initClient() async => await clientInterface.initialize();
 

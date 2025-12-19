@@ -20,7 +20,7 @@ class ConnectedDeviceDao {
 
     return [
       for (final {
-        'id': id as int,
+        'id': id as String,
         'device_id': deviceId as String,
         'name': name as String,
         'last_seen': lastSeen as String,
@@ -47,6 +47,33 @@ class ConnectedDeviceDao {
       where: 'id = ?',
       whereArgs: [device.id],
     );
+  }
+  Future<void> markClient(String hardwareName, String realId) async {
+    final db = await DatabaseHelper.instance.database;
+        await db.update(
+          'connected_devices',
+          {'device_id': realId, 'connection_status': 'connected'},
+          where: 'name = ?',
+          whereArgs: [hardwareName],
+        );
+  }
+
+  Future<String?> getDeviceId(String id) async {
+    final database = await db.database;
+    
+    final List<Map<String, Object?>> maps = await database.query(
+      'connected_devices',
+      columns: ['device_id'],
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+
+    if (maps.isNotEmpty) {
+      return maps.first['device_id'] as String;
+    }
+    
+    return null;
   }
 
   Future<void> deleteConnectedDevice(int id) async {

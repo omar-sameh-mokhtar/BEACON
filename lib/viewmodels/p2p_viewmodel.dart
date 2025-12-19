@@ -1,14 +1,23 @@
 import 'package:flutter/material.dart';
+//import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../model/service/notification_service.dart';
 import 'package:flutter_p2p_connection/flutter_p2p_connection.dart';
 import 'dart:async';
 import '../model/service/p2p_service.dart';
 import '../model/service/connected_device_service.dart';
+import '../model/service/message_service.dart';
+import '../model/Device.helper.dart';
+import '../model/mapper/device_mapper.dart';
+import '../model/data/Message.dart';
+import '../model/data/Device.dart';
 import 'package:collection/collection.dart';
 
 class P2PViewModel extends ChangeNotifier {
+
+  String myId = 'unknown-device';
   final P2PService _service = P2PService();
   final ConnectedDeviceDao _deviceDao = ConnectedDeviceDao();
+  final MessageDao _messageDao = MessageDao();
   get service => _service;
   
   bool isHost = false;
@@ -17,7 +26,6 @@ class P2PViewModel extends ChangeNotifier {
   String connectionStatus = "Disconnected";
   bool isActive = false;
   bool isConnecting = false;
-  int count=0;
   
   StreamSubscription? _msgSub;
   StreamSubscription? _peerSub;
@@ -39,6 +47,9 @@ class P2PViewModel extends ChangeNotifier {
   }
 
   void startP2P(bool isHost) async {
+    /*if(myId == 'unknown-device'){
+      myId = await DeviceIdHelper.getDeviceId();
+    }*/
     this.isHost = isHost;
     if (isHost) {
       await _service.initHost();
@@ -81,7 +92,7 @@ class P2PViewModel extends ChangeNotifier {
     _peerSub = _service
       .getPeerStream(isHost)
       .distinct((prev, next) => listEquals(prev, next))
-      .listen((list) {
+      .listen((list) async{
         if (list.length > peers.length) {
           final joiner = list.firstWhere(
           (n) => !peers.any((p) => p.id == n.id),
@@ -89,9 +100,29 @@ class P2PViewModel extends ChangeNotifier {
         );
           NotificationService.showAlert(
             "Network Update", 
-            "${joiner.username} has joined.", 
+            "${joiner.username} has joined. ${joiner.isHost ? 'HOST' : 'CLIENT'}", 
             'client_channel'
           );
+          if(isHost){
+            sendMessage("ID|${joiner.id}", joiner.id, isHost);
+          }
+          if(peers.isEmpty && !isHost){
+            sendMessage("ID|${joiner.id}", joiner.id, isHost);
+          }/*else{
+            sendMessage("ID|${joiner.id}", joiner.id, isHost);
+          }*/
+          /*
+          Device shadow = Device(
+            id: joiner.id,
+            deviceId: "unknown",
+            name: joiner.username, 
+            lastSeen: DateTime.now().toIso8601String(),
+            firstDiscovered: DateTime.now().toIso8601String(),
+            connectionStatus: "identifying",
+            isConnected: true,
+          );
+          await _deviceDao.insertConnectedDevice(shadow);
+          */
         } 
         else if (list.length < peers.length) {
           final leaver = peers.firstWhere(
@@ -111,7 +142,7 @@ class P2PViewModel extends ChangeNotifier {
   }
 
   void _listenForMessages(bool isHost) {
-    _msgSub = _service.getMessageStream(isHost).listen((msg) {
+    _msgSub = _service.getMessageStream(isHost).listen((msg) async {
       
       if (msg.startsWith("REQ:")) {
         NotificationService.showAlert(
@@ -119,8 +150,40 @@ class P2PViewModel extends ChangeNotifier {
           msg.substring(4),
           'resource_channel'
         );
-      } else {
-        chatHistory.insert(0, msg);
+      }else if (msg.startsWith("ID|")) {
+          final parts = msg.split('|');
+          String realId = parts[1];
+          myId = realId;
+          //String hardwareName = parts[2];
+
+        
+        //await _deviceDao.markClient(hardwareName, realId);
+        //String did = await _deviceDao.getDeviceId(realId) ?? "unknown";
+        /*NotificationService.showAlert(
+          "Neww Message",
+          realId + msg.startsWith("ID|").toString(),
+          'chat_channel'
+        );*/
+      }
+      else {
+        List<String> parts = msg.split('|');
+
+        String senderId = parts[0];
+        String message = parts.sublist(1).join('|');
+        
+
+        Message newMessage = Message(
+          senderDeviceId: senderId,
+          messageType: "text",
+          content: message,
+          timestamp: DateTime.now().toIso8601String(),
+          delivered: 1,
+        );
+
+        _messageDao.insertMessage(newMessage);
+
+        //chatHistory.insert(0, msg);
+
         NotificationService.showAlert(
           "New Message",
           msg,
@@ -147,12 +210,18 @@ class P2PViewModel extends ChangeNotifier {
         
         isConnecting = false;
         //});
+
       }
     });
   }
 
   Future<void> sendMessage(String text, String targetId, bool isHost) async {
     bool ok = false;
+    if (!text.startsWith("ID|") && !text.startsWith("REQ:")) {
+      
+      text = "$myId|$text";
+    }
+
     if (isHost) {
       ok = await _service.hostInterface.sendTextToClient(text, targetId);
     } else {
@@ -160,9 +229,28 @@ class P2PViewModel extends ChangeNotifier {
     }
 
     if (ok) {
-      chatHistory.insert(0, text);
-      notifyListeners();
+      //chatHistory.insert(0, text);
+      if(!text.startsWith("ID|") && !text.startsWith("REQ:")){
+        List<String> parts = text.split('|');
+        String content = parts.sublist(1).join('|');
+        Message newMessage = Message(
+          senderDeviceId: myId,
+          messageType: "text",
+          content: content,
+          timestamp: DateTime.now().toIso8601String(),
+          delivered: 0,
+        );
+      
+        _messageDao.insertMessage(newMessage);
+      
+        notifyListeners();
+      }
     }
+  }
+
+  // inside P2PViewModel
+  Future<List<Message>> getAllSavedMessages() async {
+    return await _messageDao.getAll();
   }
 
   @override
