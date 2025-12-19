@@ -13,7 +13,7 @@ class Floatingvoicebutton extends StatelessWidget{
     final voiceVM = Provider.of<VoiceViewModel>(context);
     if(!centre) {
       return FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {voiceVM.toggleListening(context);},
         backgroundColor: Colors.red,
         child: const Icon(Icons.mic, color: Colors.white),
 
