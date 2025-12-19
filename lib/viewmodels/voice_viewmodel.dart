@@ -39,7 +39,6 @@ class VoiceViewModel extends ChangeNotifier {
     }
     else if(command.contains("Resources")){
       context.go('/resources');
-
     }
     else if (command.contains("profile")) {
       context.go('/profile');
