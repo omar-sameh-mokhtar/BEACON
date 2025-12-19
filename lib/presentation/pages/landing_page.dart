@@ -4,6 +4,7 @@ import '../../viewmodels/voice_viewmodel.dart';
 import '../../viewmodels/p2p_viewmodel.dart';
 import 'package:go_router/go_router.dart';
 
+import '../widgets/FloatingVoiceButton.dart';
 //final FlutterP2pHost hostInterface = FlutterP2pHost();
 //final FlutterP2pClient clientInterface = FlutterP2pClient();
 
@@ -136,13 +137,7 @@ class _LandingPageState extends State<LandingPage> {
                 padding: const EdgeInsets.only(bottom: 60.0),
                 child: Column(
                   children: [
-                    FloatingActionButton(
-                      key: const Key('voice_button'),
-                      backgroundColor: Colors.red,
-                      elevation: 4,
-                      onPressed: () => voiceVM.toggleListening(context),
-                      child: Icon(voiceVM.isListening ? Icons.mic : Icons.mic_none, color: Colors.white, size: 32),
-                    ),
+                    Floatingvoicebutton(centre: true),
                     const SizedBox(height: 14),
                     Text(
                       voiceVM.isListening ? "Listening..." :"Press to start voice communication",

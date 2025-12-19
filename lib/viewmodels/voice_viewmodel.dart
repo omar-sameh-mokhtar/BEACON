@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../model/service/voice_service.dart';
 import 'p2p_viewmodel.dart';
-
+import 'package:go_router/go_router.dart';
 class VoiceViewModel extends ChangeNotifier {
   final VoiceService _service = VoiceService();
   final P2PViewModel p2pVM = P2PViewModel();
@@ -37,5 +37,17 @@ class VoiceViewModel extends ChangeNotifier {
       toggleListening(context);
       //p2pVM.prepareAndNavigate(context, false);
     }
+    else if(command.contains("resources")){
+      _service.speak("Navigate to resources ");
+      context.go('/resources');
+
+    }
+    else if (command.contains("profile")) {
+      _service.speak("Navigate to profile ");
+      context.go('/profile');
+    }
+
+
+
   }
 }

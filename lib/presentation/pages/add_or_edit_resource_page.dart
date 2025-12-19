@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:beacon/model/data/Resource.dart';
-import 'package:beacon/model/service/resource_service.dart';
-import 'package:beacon/model/service/user_profile_service.dart';
+import 'package:provider/provider.dart';
+
+import '../../model/data/Resource.dart';
+import '../../viewmodels/add_edit_resource_viewmodel.dart';
 
 class AddOrEditResourcePage extends StatefulWidget {
   final String resourceType;
@@ -14,16 +15,15 @@ class AddOrEditResourcePage extends StatefulWidget {
   });
 
   @override
-  State<AddOrEditResourcePage> createState() => _AddOrEditResourcePageState();
+  State<AddOrEditResourcePage> createState() =>
+      _AddOrEditResourcePageState();
 }
 
-class _AddOrEditResourcePageState extends State<AddOrEditResourcePage> {
+class _AddOrEditResourcePageState
+    extends State<AddOrEditResourcePage> {
   final _formKey = GlobalKey<FormState>();
   final _quantityController = TextEditingController();
   final _noteController = TextEditingController();
-
-  final _resourceDao = ResourceDao();
-  final _userProfileDao = UserProfileDao();
 
   late String _selectedType;
 
@@ -35,7 +35,8 @@ class _AddOrEditResourcePageState extends State<AddOrEditResourcePage> {
   void initState() {
     super.initState();
 
-    _selectedType = widget.resource?.resourceType ?? widget.resourceType;
+    _selectedType =
+        widget.resource?.resourceType ?? widget.resourceType;
 
     if (_isEditing) {
       _quantityController.text =
@@ -46,10 +47,13 @@ class _AddOrEditResourcePageState extends State<AddOrEditResourcePage> {
 
   @override
   Widget build(BuildContext context) {
+    final vm = context.read<AddEditResourceViewModel>();
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Resource' : 'Add Resource'),
+        title:
+        Text(_isEditing ? 'Edit Resource' : 'Add Resource'),
         backgroundColor: Colors.grey[900],
       ),
       body: SingleChildScrollView(
@@ -59,7 +63,7 @@ class _AddOrEditResourcePageState extends State<AddOrEditResourcePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-
+              /// Resource Type
               DropdownButtonFormField<String>(
                 value: _selectedType,
                 items: _types
@@ -72,7 +76,8 @@ class _AddOrEditResourcePageState extends State<AddOrEditResourcePage> {
                     .toList(),
                 onChanged: _isEditing
                     ? null
-                    : (value) => setState(() => _selectedType = value!),
+                    : (value) =>
+                    setState(() => _selectedType = value!),
                 decoration: const InputDecoration(
                   labelText: 'Resource Type',
                   border: OutlineInputBorder(),
@@ -83,6 +88,7 @@ class _AddOrEditResourcePageState extends State<AddOrEditResourcePage> {
 
               const SizedBox(height: 16),
 
+              /// Quantity
               TextFormField(
                 controller: _quantityController,
                 keyboardType: TextInputType.number,
@@ -104,6 +110,7 @@ class _AddOrEditResourcePageState extends State<AddOrEditResourcePage> {
 
               const SizedBox(height: 16),
 
+              /// Note
               TextFormField(
                 controller: _noteController,
                 maxLines: 3,
@@ -118,6 +125,7 @@ class _AddOrEditResourcePageState extends State<AddOrEditResourcePage> {
 
               const SizedBox(height: 32),
 
+              /// Save Button
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
@@ -125,59 +133,34 @@ class _AddOrEditResourcePageState extends State<AddOrEditResourcePage> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 50, vertical: 14),
                   textStyle: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                onPressed: _saveResource,
-                child: Text(_isEditing ? 'Update Resource' : 'Save Resource'),
+                onPressed: () async {
+                  if (!_formKey.currentState!.validate()) return;
+
+                  await vm.save(
+                    isEditing: _isEditing,
+                    old: widget.resource,
+                    type: _selectedType,
+                    quantity:
+                    int.parse(_quantityController.text),
+                    note: _noteController.text,
+                  );
+
+                  Navigator.pop(context, true);
+                },
+                child: Text(
+                  _isEditing
+                      ? 'Update Resource'
+                      : 'Save Resource',
+                ),
               ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  Future<void> _saveResource() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    final user = await _userProfileDao.getUserProfile();
-
-    if (_isEditing) {
-      final updated = Resource(
-        id: widget.resource!.id,
-        resourceType: _selectedType,
-        quantity: int.parse(_quantityController.text),
-        note: _noteController.text,
-        requesterId: "",
-        status: 'available',
-        timestamp: DateTime.now().toIso8601String(),
-        owner: user?.name ?? "Me",
-        isRequested: false,
-        isMine: true,
-      );
-
-      await _resourceDao.updateResource(updated);
-    } else {
-      final all = await _resourceDao.getAllResources();
-      final newId =
-          (all.isNotEmpty ? all.map((e) => e.id).reduce((a, b) => a > b ? a : b) : 0) + 1;
-
-      final resource = Resource(
-        id: newId,
-        resourceType: _selectedType,
-        quantity: int.parse(_quantityController.text),
-        note: _noteController.text,
-        requesterId: "",
-        status: 'available',
-        timestamp: DateTime.now().toIso8601String(),
-        owner: user?.name ?? "Me",
-        isRequested: true,
-        isMine: true,
-      );
-
-      await _resourceDao.addResource(resource);
-    }
-
-    Navigator.pop(context, true);
   }
 }
