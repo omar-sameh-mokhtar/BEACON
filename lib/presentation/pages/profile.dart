@@ -15,11 +15,16 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
 
+
   @override
   void initState() {
     super.initState();
-    context.read<ProfileViewModel>().loadProfile();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProfileViewModel>().loadProfile();
+    });
   }
+
 
   @override
   Widget build(BuildContext context) {

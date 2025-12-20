@@ -11,11 +11,26 @@ class FakeResourcesViewModel extends ChangeNotifier
   @override
   bool isLoading = false;
 
+  List<Resource> _resources = [];
+
   @override
   final List<String> tabs = ['Medical', 'Shelter', 'Food'];
 
+  // ================= REQUIRED =================
+
   @override
-  List<Resource> get filteredResources => [];
+  List<Resource> get allResources => _resources;
+
+  @override
+  List<Resource> get filteredResources => _resources;
+
+  @override
+  void replaceAll(List<Resource> list) {
+    _resources = list;
+    notifyListeners();
+  }
+
+  // ================= METHODS =================
 
   @override
   Future<void> init() async {}
