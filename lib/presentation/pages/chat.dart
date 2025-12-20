@@ -59,6 +59,14 @@ class ChattingPageState extends State<ChattingPage> {
   }
 */
   @override
+    void initState() {
+      super.initState();
+      // Initial load of messages for this specific peer
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<P2PViewModel>().refreshMessages(widget.target.id);
+      });
+  }
+  @override
   Widget build(BuildContext context) {
     double width_ = MediaQuery.of(context).size.width;
     double height_ = MediaQuery.of(context).size.height;
@@ -101,30 +109,6 @@ class ChattingPageState extends State<ChattingPage> {
               ),
             ),
           ),
-          // Inside ChattingPageState's build method
-// ... inside the Column, above the Expanded list ...
-
-          FutureBuilder<List<Message>>(
-            future: vm.getAllSavedMessages(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return const Text("Loading DB...", style: TextStyle(color: Colors.white));
-              
-              final dbMsgs = snapshot.data!;
-              return Container(
-                height: 100, // Fixed height for debug area
-                color: Colors.blueGrey.withOpacity(0.3),
-                child: ListView(
-                  children: [
-                    Text("DB COUNT: ${dbMsgs.length}", style: TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
-                    ...dbMsgs.map((m) => Text(
-                      "[DB] ${m.senderDeviceId}: ${m.content}",
-                      style: const TextStyle(color: Colors.greenAccent, fontSize: 10),
-                    )).toList(),
-                  ],
-                ),
-              );
-            },
-          ),
           SizedBox(height: height_ * 0.01),
           Expanded(
             child: Padding(
@@ -138,22 +122,33 @@ class ChattingPageState extends State<ChattingPage> {
                 child: ListView.builder(
                   reverse: true,
                   padding: const EdgeInsets.all(10),
-                  itemCount: vm.chatHistory.length,
+                  itemCount: vm.currentChatMessages.length,
                   itemBuilder: (context, index) {
-                    final msg = vm.chatHistory[index];
+                    final msg = vm.currentChatMessages[index];
+                    bool isMe = msg.senderDeviceId != widget.target.id;
                     return Container(
                       
                       margin: const EdgeInsets.symmetric(vertical: 5),
-                      alignment: /*msg['isMe'] ?*/ Alignment.centerRight,// : Alignment.centerLeft,
+                      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
                       child: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: /*msg['isMe'] ?*/ Colors.red,// : Colors.grey[700],
+                          color: isMe ? Colors.red : Colors.grey[700],
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Text(
-                          msg,
-                          style: const TextStyle(color: Colors.white),
+                        child: Column(
+                          crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              msg.content,
+                              style: const TextStyle(color: Colors.white, fontSize: 16),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              msg.timestamp.split('T').last.substring(0, 5), // Shows HH:mm
+                              style: const TextStyle(color: Colors.white54, fontSize: 10),
+                            ),
+                          ],
                         ),
                       ),
                     );

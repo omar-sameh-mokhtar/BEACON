@@ -11,6 +11,7 @@ class NavigationBarBottom extends StatelessWidget {
   Widget build(BuildContext context) {
     final p2pVM = context.watch<P2PViewModel>();
     return BottomNavigationBar(
+      key: const Key('bottom_navigation_bar'),
       currentIndex: currentIndex,
       backgroundColor: Colors.black,
       selectedItemColor: Colors.red,

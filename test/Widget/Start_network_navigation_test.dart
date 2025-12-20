@@ -65,7 +65,7 @@ void main() {
       );
 
       await tester.pumpAndSettle();
-
+      expect(find.byKey(const Key('Centre_voice_button')), findsOneWidget);
       // ---------- Action ----------
       expect(find.byKey(const Key('start_button')), findsOneWidget);
 

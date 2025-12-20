@@ -73,6 +73,7 @@ class DatabaseHelper {
       CREATE TABLE messages (
         id INTEGER PRIMARY KEY,
         sender_device_id TEXT,
+        receiver_device_id TEXT,
         message_type TEXT,
         content TEXT,
         timestamp TEXT,

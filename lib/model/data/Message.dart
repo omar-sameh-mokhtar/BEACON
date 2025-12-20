@@ -1,6 +1,7 @@
 class Message {
   final int? id;
   final String senderDeviceId;
+  final String receiverDeviceId;
   final String messageType;
   final String content;
   final String timestamp;
@@ -9,6 +10,7 @@ class Message {
   Message({
     this.id,
     required this.senderDeviceId,
+    required this.receiverDeviceId,
     required this.messageType,
     required this.content,
     required this.timestamp,
@@ -19,6 +21,7 @@ class Message {
     return {
       'id': id,
       'sender_device_id': senderDeviceId,
+      'receiver_device_id': receiverDeviceId,
       'message_type': messageType,
       'content': content,
       'timestamp': timestamp,
@@ -30,6 +33,7 @@ class Message {
     return Message(
       id: map['id'] as int,
       senderDeviceId: map['sender_device_id'] as String,
+      receiverDeviceId: map['receiver_device_id'] as String,
       messageType: map['message_type'] as String,
       content: map['content'] as String,
       timestamp: map['timestamp'] as String,
@@ -39,7 +43,7 @@ class Message {
 
   @override
   String toString() {
-    return 'Message{id: $id, senderDeviceId: $senderDeviceId, '
+    return 'Message{id: $id, senderDeviceId: $senderDeviceId, receiverDeviceId: $receiverDeviceId, '
         'messageType: $messageType, content: $content, timestamp: $timestamp, delivered: $delivered}';
   }
 }
