@@ -343,10 +343,15 @@ class P2PViewModel extends ChangeNotifier {
   }
 
   @override
-  void dispose() {
+  void dispose() async{
     _msgSub?.cancel();
     _peerSub?.cancel();
     _stateSub?.cancel();
+
+    final UserProfile? currentUser = await userProfileDao.getUserProfile();
+
+    await _resourceDao.ClearResources( currentUser?.name ?? "");
+
     super.dispose();
   }
 
@@ -375,9 +380,11 @@ class P2PViewModel extends ChangeNotifier {
       _msgSub = null;
       _peerSub = null;
       _stateSub = null;
-      
+
+
+
       notifyListeners();
-    
+
   }
 
   Future<void> SyncToClient(String ClientID, String resources_msg) async {
@@ -496,7 +503,7 @@ class P2PViewModel extends ChangeNotifier {
   }    
   
   // REQ:resourceOwner:requester
-  Future<void> requestResource(Resource resource, String text, String name) async{
+  Future<void> requestResource(Resource resource, String name) async{
       await sendBroadcast("REQ:${resource.owner}:$name");
   }
 

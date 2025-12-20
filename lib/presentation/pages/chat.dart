@@ -5,6 +5,7 @@ import '../../model/service/p2p_service.dart';
 import '../../model/data/Message.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/p2p_viewmodel.dart';
+import '../../viewmodels/voice_viewmodel.dart';
 
 
 class ChattingPage extends StatefulWidget {
@@ -77,6 +78,7 @@ class ChattingPageState extends State<ChattingPage> {
     double width_ = MediaQuery.of(context).size.width;
     double height_ = MediaQuery.of(context).size.height;
     final vm = context.watch<P2PViewModel>();
+    final voiceVm = context.watch<VoiceViewModel>();
 
     return Scaffold(
       backgroundColor: const Color(0xFF1E1E1E),
@@ -156,10 +158,13 @@ FutureBuilder<List<Message>>(
                   itemBuilder: (context, index) {
                     
                     final msg = vm.currentChatMessages[index];
-                    bool isBroadcast = msg.receiverDeviceId == "ALL";
+                    //bool isBroadcast = msg.receiverDeviceId == "ALL";
                     bool isMe = msg.senderDeviceId != widget.target.id;
-                    return Container(
-                      
+                    return GestureDetector(
+                    onTap: () {
+                      voiceVm.speakMessage(msg.content);
+                    },
+                    child: Container(
                       margin: const EdgeInsets.symmetric(vertical: 5),
                       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
                       child: Container(
@@ -177,13 +182,13 @@ FutureBuilder<List<Message>>(
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              msg.timestamp.split('T').last.substring(0, 5), // Shows HH:mm
+                              msg.timestamp.split('T').last.substring(0, 5),
                               style: const TextStyle(color: Colors.white54, fontSize: 10),
                             ),
                           ],
                         ),
                       ),
-                    );
+                    ));
                   },
                 ),
               ),
@@ -220,7 +225,24 @@ FutureBuilder<List<Message>>(
                     }
                   },
                 ),
-                const Icon(Icons.mic, color: Colors.white),
+                IconButton(
+                  key: const Key("voice_dictation_button"),
+                  icon: Icon(
+                    voiceVm.isListening ? Icons.mic : Icons.mic_none,
+                    color: voiceVm.isListening ? Colors.red : Colors.white,
+                  ),
+                  onPressed: () {
+                    if (voiceVm.isListening) {
+                      voiceVm.stopDictation();
+                    } else {
+                      voiceVm.startDictation((text) {
+                        setState(() {
+                          _ctrl.text = text;
+                        });
+                      });
+                    }
+                  },
+                ),
               ],
             ),
           ),

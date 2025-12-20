@@ -84,8 +84,10 @@ class _ResourcesPageState extends State<ResourcesPage> {
           ),
         ],
       ),
+      //floatingActionButton: Floatingvoicebutton(centre: false),
     );
   }
+
 
   Widget _buildTabs(ResourcesViewModel vm) {
     return Container(
@@ -107,7 +109,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
                     ),
                   ),
                 ),
-                child: Column(
+                child: Column(  
                   children: [
                     Icon(
                       _tabIcon(index),
@@ -133,6 +135,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
     );
   }
 
+
   Widget _buildList(ResourcesViewModel vm) {
     if (vm.filteredResources.isEmpty) {
       return const Center(
@@ -153,12 +156,15 @@ class _ResourcesPageState extends State<ResourcesPage> {
     );
   }
 
+
   Widget _buildCard(
       BuildContext context,
       ResourcesViewModel vm,
       Resource item,
       ) {
+
     final profile = context.watch<ProfileViewModel>();
+    final p2pvm = context.watch<P2PViewModel>();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -218,9 +224,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
                           color: Colors.white, size: 20),
                       onPressed: () {
                         vm.deleteResource(item.id);
-                        context
-                            .read<P2PViewModel>()
-                            .broadcastDeleteResource(item.id);
+                        context.watch<P2PViewModel>().broadcastDeleteResource(item.id);
                       },
                     ),
                   ],
@@ -242,7 +246,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
             style: const TextStyle(color: Colors.white70),
           ),
 
-          if (item.owner != profile.owner) ...[
+          if (item.owner!= profile.owner) ...[
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -254,7 +258,8 @@ class _ResourcesPageState extends State<ResourcesPage> {
                 icon: const Icon(Icons.send),
                 label: const Text('Request Resource'),
                 onPressed: () {
-                  _showRequestDialog(context, vm, item);
+                  p2pvm.requestResource(item, profile.owner ?? "ay7aga");
+                  debugPrint("++++++++++++++++++++++++ request resource ${profile.owner} +++++++++++++++++++");
                 },
               ),
             ),
@@ -264,15 +269,15 @@ class _ResourcesPageState extends State<ResourcesPage> {
     );
   }
 
+
   void _showRequestDialog(
       BuildContext context,
       ResourcesViewModel vm,
       Resource resource,
       ) {
     final controller = TextEditingController();
-
-    final p2pVM = context.read<P2PViewModel>();       // ✅
-    final profile = context.read<ProfileViewModel>(); // ✅
+    final p2pVM = Provider.of<P2PViewModel>(context, listen: false);
+    final profile = Provider.of<ProfileViewModel>(context, listen: false);
 
     showDialog(
       context: context,
@@ -296,7 +301,6 @@ class _ResourcesPageState extends State<ResourcesPage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 const SizedBox(height: 8),
 
                 Text(
@@ -329,9 +333,11 @@ class _ResourcesPageState extends State<ResourcesPage> {
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () =>
+                            Navigator.pop(context),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.grey),
+                          side:
+                          const BorderSide(color: Colors.grey),
                         ),
                         child: const Text(
                           'Cancel',
@@ -346,11 +352,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
                           backgroundColor: Colors.red,
                         ),
                         onPressed: () {
-                          p2pVM.requestResource(
-                            resource,
-                            controller.text,
-                            profile.owner,
-                          );
+                          p2pVM.requestResource(resource, profile.owner);
                           Navigator.pop(context);
                         },
                         child: const Text('Send'),
@@ -365,6 +367,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
       },
     );
   }
+
 
   IconData _tabIcon(int i) {
     if (i == 0) return Icons.medical_services;
