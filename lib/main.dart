@@ -1,4 +1,4 @@
-import 'package:beacon/presentation/pages/chat.dart';
+
 import 'package:beacon/presentation/pages/dashboard.dart';
 import 'package:beacon/presentation/pages/resources.dart';
 import 'package:beacon/viewmodels/ProfileViewModel.dart';
@@ -114,31 +114,49 @@ class MyApp extends StatelessWidget {
   }
 }
 
+
 class MyAppState extends ChangeNotifier {
-  
   ThemeMode _themeMode = ThemeMode.dark;
+  List<String> _predefinedMessages = ["HELP", "LOCATION", "MEDICAL"]; // Defaults
 
   ThemeMode get themeMode => _themeMode;
   bool get isDarkMode => _themeMode == ThemeMode.dark;
+  List<String> get predefinedMessages => _predefinedMessages;
 
   MyAppState() {
-    _loadTheme();
+    _loadInitialData();
   }
 
-  Future<void> _loadTheme() async {
+  Future<void> _loadInitialData() async {
     final prefs = await SharedPreferences.getInstance();
+    
     final isDark = prefs.getBool('isDarkMode') ?? true;
     _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
-    notifyListeners(); 
-    //print(isDark);
+    
+    _predefinedMessages = prefs.getStringList('predefinedMessages') ?? ["HELP", "LOCATION", "MEDICAL"];
+    
+    notifyListeners();
   }
 
   Future<void> toggleTheme() async {
     final prefs = await SharedPreferences.getInstance();
-    final isDark = _themeMode == ThemeMode.dark;
-    _themeMode = isDark ? ThemeMode.light : ThemeMode.dark;
-    await prefs.setBool('isDarkMode', _themeMode == ThemeMode.dark);
-    notifyListeners(); 
+    _themeMode = (_themeMode == ThemeMode.dark) ? ThemeMode.light : ThemeMode.dark;
+    await prefs.setBool('isDarkMode', isDarkMode);
+    notifyListeners();
+  }
+
+  Future<void> addPredefinedMessage(String message) async {
+    if (message.isEmpty || _predefinedMessages.contains(message)) return;
+    final prefs = await SharedPreferences.getInstance();
+    _predefinedMessages.add(message);
+    await prefs.setStringList('predefinedMessages', _predefinedMessages);
+    notifyListeners();
+  }
+
+  Future<void> deletePredefinedMessage(String message) async {
+    final prefs = await SharedPreferences.getInstance();
+    _predefinedMessages.remove(message);
+    await prefs.setStringList('predefinedMessages', _predefinedMessages);
+    notifyListeners();
   }
 }
-

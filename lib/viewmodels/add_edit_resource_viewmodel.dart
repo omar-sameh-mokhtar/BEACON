@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import '../model/data/Resource.dart';
-import '../model/service/p2p_service.dart';
 import '../model/service/resource_service.dart';
 import '../model/service/user_profile_service.dart';
-import 'p2p_viewmodel.dart';
 
 class AddEditResourceViewModel extends ChangeNotifier {
   final ResourceDao _resourceDao = ResourceDao();

@@ -30,12 +30,15 @@ class VoiceViewModel extends ChangeNotifier {
     if (command.contains("start")) {
       _service.speak("Starting communication");
       toggleListening(context);
-      //p2pVM.prepareAndNavigate(context, true);
+      p2pVM.initP2P(context, true);
+      context.goNamed('dashboard', pathParameters: {'isHost': '${p2pVM.isHost}'});
       
     } else if (command.contains("join")) {
       _service.speak("Joining existing network");
       toggleListening(context);
       //p2pVM.prepareAndNavigate(context, false);
+      p2pVM.initP2P(context, false);
+      context.goNamed('dashboard', pathParameters: {'isHost': '${p2pVM.isHost}'});
     }
     else if(command.contains("resources")){
       _service.speak("Navigate to resources ");
@@ -50,6 +53,12 @@ class VoiceViewModel extends ChangeNotifier {
       context.go('/profile');
     }
 
+    else if (command.contains("dashboard")) {
+      _service.speak("Navigate to dashboard ");
+      toggleListening(context);
+      context.goNamed('dashboard', pathParameters: {'isHost': '${p2pVM.isHost}'}); 
+    }
+
 
 
   }
@@ -62,7 +71,7 @@ class VoiceViewModel extends ChangeNotifier {
       notifyListeners();
       
       _service.listen(onResult: (text) {
-        onTextReceived(text); // Pass the text back to the ChattingPage
+        onTextReceived(text);
       });
     }
   }

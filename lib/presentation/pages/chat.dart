@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_p2p_connection/flutter_p2p_connection.dart';
-import 'dart:async';
-import '../../model/service/p2p_service.dart';
-import '../../model/data/Message.dart';
+
 import 'package:provider/provider.dart';
 import '../../viewmodels/p2p_viewmodel.dart';
 import '../../viewmodels/voice_viewmodel.dart';
@@ -20,45 +18,8 @@ class ChattingPage extends StatefulWidget {
 
 class ChattingPageState extends State<ChattingPage> {
   
- // final List<String> _history = [];
   final TextEditingController _ctrl = TextEditingController();
-  //StreamSubscription? _msgSub;
-/*
-  @override
-  void initState() {
-    super.initState();
-    final stream = widget.isHost ? widget.hostInterface.streamReceivedTexts() : widget.clientInterface.streamReceivedTexts();
-    _msgSub = stream.listen((msg) {
-      x="yes";
-      print("[MSG RECEIVED] $msg");
-      setState(() => _history.insert(0, "Peer: $msg"));
-
-    });
-  }
-*//*
-  void _send() async {
-    if (_ctrl.text.isEmpty) return;
-    bool ok = false;
-    if (widget.isHost) {
-      ok = await widget.hostInterface.sendTextToClient(_ctrl.text, widget.target.id);
-    } else {
-      await widget.clientInterface.broadcastText(_ctrl.text);
-      ok = true;
-    }
-    if (ok) {
-      setState(() {
-        _history.insert(0, "Me: ${_ctrl.text}");
-        _ctrl.clear();
-      });
-    }
-  }
-*//*
-  @override
-  void dispose() {
-    _msgSub?.cancel();
-    super.dispose();
-  }
-*/
+  
   @override
     void initState() {
       super.initState();
@@ -69,7 +30,7 @@ class ChattingPageState extends State<ChattingPage> {
 
   @override
   void dispose() {
-    Provider.of<P2PViewModel>(context, listen: false).closeChat();
+    //Provider.of<P2PViewModel>(context, listen: false).closeChat();
     super.dispose();
   }
 
@@ -117,30 +78,7 @@ class ChattingPageState extends State<ChattingPage> {
               ),
             ),
           ),
-          // Inside ChattingPageState's build method
-// ... inside the Column, above the Expanded list ...
-
-FutureBuilder<List<Message>>(
-  future: vm.getAllSavedMessages(),
-  builder: (context, snapshot) {
-    if (!snapshot.hasData) return const Text("Loading DB...", style: TextStyle(color: Colors.white));
-    
-    final dbMsgs = snapshot.data!;
-    return Container(
-      height: 100, // Fixed height for debug area
-      color: Colors.blueGrey.withOpacity(0.3),
-      child: ListView(
-        children: [
-          Text("DB COUNT: ${dbMsgs.length}", style: TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
-          ...dbMsgs.map((m) => Text(
-            "[DB] ${m.senderDeviceId}: ${m.content}",
-            style: const TextStyle(color: Colors.greenAccent, fontSize: 10),
-          )).toList(),
-        ],
-      ),
-    );
-  },
-),
+          
           SizedBox(height: height_ * 0.01),
           Expanded(
             child: Padding(
@@ -245,7 +183,7 @@ FutureBuilder<List<Message>>(
                 ),
               ],
             ),
-          ),
+          ),/*
           SizedBox(height: height_ * 0.01),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: width_ * 0.025),
@@ -257,23 +195,11 @@ FutureBuilder<List<Message>>(
                 MessageButton('MEDICAL'),
               ],
             ),
-          ),
+          ),*/
           SizedBox(height: height_ * 0.03),
         ],
       ),
     );
   }
 
-  Widget MessageButton(String text) {
-    return ElevatedButton(
-
-      onPressed: () => null,//_sendPredefinedMessage(text),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color.fromARGB(255, 48, 48, 48),
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-      child: Text(text),
-    );
-  }
 }

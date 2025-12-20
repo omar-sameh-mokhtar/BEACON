@@ -2,9 +2,9 @@ class Device {
   final String? id;
   final String deviceId;
   final String name;
-  final String lastSeen;          // ISO Date
-  final String firstDiscovered;   // ISO Date
-  final String connectionStatus;  // idle | hosting | connected
+  final String lastSeen;          
+  final String firstDiscovered;   
+  final String connectionStatus;
   final bool isConnected;
 
   Device({
@@ -29,7 +29,6 @@ class Device {
     };
   }
 
-  /// SQLite → Model
   factory Device.fromMap(Map<String, Object?> map) {
     return Device(
       id: map['id'] as String?,

@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_p2p_connection/flutter_p2p_connection.dart';
-
 import 'package:beacon/presentation/widgets/AppBarTop.dart';
 import 'package:beacon/presentation/widgets/NavigationBarBottom.dart';
 import 'package:beacon/presentation/widgets/FloatingVoiceButton.dart';
 import 'chat.dart';
-import 'dart:async';
-import '../../model/service/p2p_service.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/p2p_viewmodel.dart';
+import '../../main.dart';
 
-//final FlutterP2pHost hostInterface = FlutterP2pHost();
-//final FlutterP2pClient clientInterface = FlutterP2pClient();
 
 class NetworkDashboardPage extends StatefulWidget {
   final bool isHost;
@@ -23,86 +18,6 @@ class NetworkDashboardPage extends StatefulWidget {
 
 class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
 
-  /*List<P2pClientInfo> _peers = [];
-  List<BleDiscoveredDevice> _discoveredHosts = [];
-  String _connectionStatus = "Initializing...";
-  bool _isActive = false;
-  bool _isConnecting = false;*/
-
-  /*StreamSubscription? _stateSub;
-  StreamSubscription? _peerSub;*/
-
-  /*@override
-  void initState() {
-    super.initState();
-    _startP2PEngine();
-  }*/
-  /*
-  Future<void> _startP2PEngine() async {
-    try {
-      if (widget.isHost) {
-        await hostInterface.initialize(); //
-        _stateSub = hostInterface.streamHotspotState().listen((state) {
-          setState(() {
-            _isActive = state.isActive;
-            _connectionStatus = state.isActive ? "Hosting: ${state.ssid}" : "Failed: ${state.failureReason}";
-          });
-          print("[HOST STATE] Active: ${state.isActive}, SSID: ${state.ssid}");
-        });
-        _peerSub = hostInterface.streamClientList().listen((list) {
-          setState(() => _peers = list);
-          print("[HOST PEERS] Count: ${list.length}");
-        });
-        await hostInterface.createGroup(advertise: true);
-      } else {
-        await clientInterface.initialize(); //
-        _stateSub = clientInterface.streamHotspotState().listen((state) {
-          setState(() {
-            _isActive = state.isActive;
-            _connectionStatus = state.isActive ? "Connected to Network" : "Searching...";
-            if (state.isActive) _isConnecting = false;
-          });
-        });
-        _peerSub = clientInterface.streamClientList().listen((list) => setState(() => _peers = list));
-        _scanForHosts();
-      }
-    } catch (e) {
-      setState(() => _connectionStatus = "Error: $e");
-    }
-  }*/
-/*
-  void _scanForHosts() async {
-    print("[CLIENT] Starting Auto-Scan...");
-    setState(() => _connectionStatus = "Scanning for emergency signal...");
-
-    await clientInterface.startScan((devices) {
-      setState(() => _discoveredHosts = devices);
-
-      // AUTO-JOIN LOGIC:
-      // If we found a device, aren't active yet, and aren't already trying to connect
-      if (devices.isNotEmpty && !_isActive && !_isConnecting) {
-        _isConnecting = true;
-        final target = devices.first;
-        
-        print("[CLIENT] Found ${target.deviceName}. Auto-connecting...");
-        
-        setState(() => _connectionStatus = "Auto-joining: ${target.deviceName}...");
-        
-        // It's best practice to stop scanning before initiating a connection
-        clientInterface.stopScan().then((_) {
-          clientInterface.connectWithDevice(target);
-        });
-      }
-    });
-  }*/
-/*
-  @override
-  void dispose() {
-    _stateSub?.cancel();
-    _peerSub?.cancel();
-    super.dispose();
-  }*/
-  // ====== UI ======
   @override
   Widget build(BuildContext context) {
     final p2pVM = context.watch<P2PViewModel>();
@@ -119,26 +34,7 @@ class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
               children: [
                 Text("Connected: ${p2pVM.peers.length} Devices",
                     style: TextStyle(color: Colors.white)),
-                Row(
-                  children: [
-                    /*DropdownButton(
-                      dropdownColor: Colors.grey[900],
-                      style: TextStyle(color: Colors.white),
-                      value: selectedRange,
-                      items: ["50m", "100m", "200m"]
-                          .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                          .toList(),
-                      onChanged: (v) {
-                        setState(() {
-                          selectedRange = v!;
-                        });
-                      },
-                    ),*/
-                    IconButton(
-                        onPressed: () {},
-                        icon: Icon(Icons.refresh, color: Colors.white))
-                  ],
-                )
+                
               ],
             ),
             SizedBox(height: 10),
@@ -170,7 +66,7 @@ class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
                         borderRadius: BorderRadius.circular(10)),
                     child: ListTile(
                       leading: CircleAvatar(
-                          backgroundColor: p.isHost! ? Colors.orange : Colors.red,
+                          backgroundColor: p.isHost ? Colors.orange : Colors.red,
                           child: Icon(Icons.person, color: Colors.white)),
                       title: Text(p.username,
                           style: TextStyle(
@@ -178,7 +74,7 @@ class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(p.isHost! ? "Host" : "Client",
+                          Text(p.isHost ? "Host" : "Client",
                               style: TextStyle(color: Colors.grey)),
                           Text("Last seen: $lastSeenText",
                               style: TextStyle(color: Colors.grey)),
@@ -217,93 +113,137 @@ class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
       bottomNavigationBar: NavigationBarBottom(currentIndex: 0)
     );
   }
+void _showBroadcastDialog(BuildContext context) {
+  final TextEditingController msgController = TextEditingController();
+  final TextEditingController newMsgController = TextEditingController();
+  final p2pVM = context.read<P2PViewModel>();
+  final appState = context.read<MyAppState>();
 
-  void _showBroadcastDialog(BuildContext context) {
-    final TextEditingController msgController = TextEditingController();
-    final p2pVM = context.read<P2PViewModel>();
-
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (_) {
-        return Dialog(
-          backgroundColor: Colors.grey[900],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ===== Title =====
-                Text(
-                  "Broadcast Message",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 12),
-
-                // ===== Input =====
-                TextField(
-                  controller: msgController,
-                  maxLines: 3,
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: "Type your message...",
-                    hintStyle: TextStyle(color: Colors.grey),
-                    filled: true,
-                    fillColor: Colors.black,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-
-                SizedBox(height: 16),
-
-                // ===== Buttons =====
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (_) {
+      return StatefulBuilder(
+        builder: (context, setDialogState) {
+          return Dialog(
+            backgroundColor: Colors.grey[900],
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text("Cancel", style: TextStyle(color: Colors.grey)),
+                    const Text(
+                      "Broadcast Message",
+                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                     ),
-                    SizedBox(width: 8),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        shape: RoundedRectangleBorder(
+                    const SizedBox(height: 12),
+
+                    const Text("Shortcuts (Long press to delete)", 
+                        style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: appState.predefinedMessages.map((text) {
+                        return GestureDetector(
+                          onLongPress: () async {
+                            await appState.deletePredefinedMessage(text);
+                            setDialogState(() {});
+                          },
+                          child: ActionChip(
+                            backgroundColor: Colors.red.withOpacity(0.2),
+                            label: Text(text, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                            onPressed: () => msgController.text = text,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 12),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: newMsgController,
+                            style: const TextStyle(color: Colors.white, fontSize: 13),
+                            decoration: const InputDecoration(
+                              hintText: "Add new shortcut...",
+                              hintStyle: TextStyle(color: Colors.grey),
+                              isDense: true,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add_circle, color: Colors.green),
+                          onPressed: () async {
+                            if (newMsgController.text.trim().isNotEmpty) {
+                              await appState.addPredefinedMessage(newMsgController.text.trim());
+                              newMsgController.clear();
+                              setDialogState(() {}); 
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                    const Divider(color: Colors.grey),
+
+                    TextField(
+                      controller: msgController,
+                      maxLines: 3,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: "Type your message...",
+                        hintStyle: const TextStyle(color: Colors.grey),
+                        filled: true,
+                        fillColor: Colors.black,
+                        border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none,
                         ),
                       ),
-                      onPressed: () async {
-                        final msg = msgController.text.trim();
-                        if (msg.isEmpty) return;
-
-                        await p2pVM.sendBroadcastMessage(msg, p2pVM.myId);
-                        Navigator.pop(context);
-                      },
-                      child: Text("Send", style: TextStyle(color: Colors.white)),
                     ),
+
+                    const SizedBox(height: 16),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          onPressed: () async {
+                            final msg = msgController.text.trim();
+                            if (msg.isEmpty) return;
+
+                            await p2pVM.sendBroadcastMessage(msg, p2pVM.myId);
+                            Navigator.pop(context);
+                          },
+                          child: const Text("Send", style: TextStyle(color: Colors.white)),
+                        ),
+                      ],
+                    )
                   ],
-                )
-              ],
+                ),
+              ),
             ),
-          ),
-        );
-      },
-    );
-  }
+          );
+        }
+      );
+    },
+  );
+}
 
 
 
 
 }
-

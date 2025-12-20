@@ -26,7 +26,7 @@ class AppBarTop extends StatelessWidget implements PreferredSizeWidget{
         IconButton(
           icon: Icon(
             isDark ? Icons.dark_mode : Icons.light_mode,
-            color: isDark ? Colors.yellow : Colors.black,
+            color: isDark ? Colors.yellow : Colors.blueGrey,
           ),
           onPressed: () {
             themeProvider.toggleTheme();

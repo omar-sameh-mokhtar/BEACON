@@ -7,8 +7,8 @@ class DeviceMapper {
 
     return Device(
       deviceId: ble.deviceAddress,
-      name: ble.deviceName?.isNotEmpty == true
-          ? ble.deviceName!
+      name: ble.deviceName.isNotEmpty == true
+          ? ble.deviceName
           : "Unknown Device",
       lastSeen: now,
       firstDiscovered: now,

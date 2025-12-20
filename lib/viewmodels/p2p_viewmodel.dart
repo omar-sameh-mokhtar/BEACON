@@ -334,6 +334,8 @@ class P2PViewModel extends ChangeNotifier {
   }
   Future<void> loadChatWithPeer(String peerId) async {
     activePeerId = peerId;
+    currentChatMessages = [];
+    notifyListeners();
     currentChatMessages = await _messageDao.getChatHistory(myId, peerId);
     notifyListeners();
   }void closeChat() {
