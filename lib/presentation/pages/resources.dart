@@ -274,6 +274,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
       ) {
     final controller = TextEditingController();
     final p2pVM = context.watch<P2PViewModel>();
+    final profile = context.watch<ProfileViewModel>();
 
     showDialog(
       context: context,
@@ -348,7 +349,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
                           backgroundColor: Colors.red,
                         ),
                         onPressed: () {
-                          p2pVM.requestResource(resource, controller.text);
+                          p2pVM.requestResource(resource, controller.text, profile.owner);
                           Navigator.pop(context);
                         },
                         child: const Text('Send'),

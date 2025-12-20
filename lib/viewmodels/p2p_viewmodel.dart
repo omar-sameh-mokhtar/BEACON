@@ -164,7 +164,7 @@ class P2PViewModel extends ChangeNotifier {
 
         if( currentUser?.name == msg.split(":")[1]) {
           NotificationService.showAlert(
-              "Resource Request",
+              "Resource Request from ${msg.split(":")[2]}",
               msg.substring(4),
               'resource_channel'
           );
@@ -455,9 +455,9 @@ class P2PViewModel extends ChangeNotifier {
     );
   }
 
-  // REQ:resourceOwner:resourceId
-  Future<void> requestResource(Resource resource, String text) async{
-      sendBroadcast("REQ:${resource.owner}:${resource.id}");
+  // REQ:resourceOwner:requester
+  Future<void> requestResource(Resource resource, String text, String name) async{
+      await sendBroadcast("REQ:${resource.owner}:$name");
   }
 
 }
