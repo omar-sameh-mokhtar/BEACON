@@ -57,147 +57,149 @@ class ChattingPageState extends State<ChattingPage> {
         titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20),
         centerTitle: true,
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          /*Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              height: height_ * 0.07,
-              width: width_ * 0.95,
-              decoration: const BoxDecoration(
-                color: Color.fromARGB(255, 48, 48, 48),
-                borderRadius: BorderRadius.all(Radius.circular(20.0)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.radar, color: Colors.white),
-                  const SizedBox(width: 10),
-                   Text(widget.target.id, style: TextStyle(color: Colors.white)),
-                ],
-              ),
-            ),
-          ),*/
-          
-          SizedBox(height: height_ * 0.01),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: height_ * 0.001),
+      body: Center(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            /*Center(
               child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 15),
+                height: height_ * 0.07,
                 width: width_ * 0.95,
                 decoration: const BoxDecoration(
                   color: Color.fromARGB(255, 48, 48, 48),
                   borderRadius: BorderRadius.all(Radius.circular(20.0)),
                 ),
-                child: ListView.builder(
-                  reverse: true,
-                  padding: const EdgeInsets.all(10),
-                  itemCount: vm.currentChatMessages.length,
-                  itemBuilder: (context, index) {
-                    
-                    final msg = vm.currentChatMessages[index];
-                    //bool isBroadcast = msg.receiverDeviceId == "ALL";
-                    bool isMe = msg.senderDeviceId != widget.target.id;
-                    return GestureDetector(
-                    onTap: () {
-                      voiceVm.speakMessage(msg.content);
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 5),
-                      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                child: Row(
+                  children: [
+                    const Icon(Icons.radar, color: Colors.white),
+                    const SizedBox(width: 10),
+                     Text(widget.target.id, style: TextStyle(color: Colors.white)),
+                  ],
+                ),
+              ),
+            ),*/
+            
+            SizedBox(height: height_ * 0.01),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(bottom: height_ * 0.001),
+                child: Container(
+                  width: width_ * 0.95,
+                  decoration: const BoxDecoration(
+                    color: Color.fromARGB(255, 48, 48, 48),
+                    borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                  ),
+                  child: ListView.builder(
+                    reverse: true,
+                    padding: const EdgeInsets.all(10),
+                    itemCount: vm.currentChatMessages.length,
+                    itemBuilder: (context, index) {
+                      
+                      final msg = vm.currentChatMessages[index];
+                      //bool isBroadcast = msg.receiverDeviceId == "ALL";
+                      bool isMe = msg.senderDeviceId != widget.target.id;
+                      return GestureDetector(
+                      onTap: () {
+                        voiceVm.speakMessage(msg.content);
+                      },
                       child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: isMe ? Colors.red : Colors.grey[700],
-                          borderRadius: BorderRadius.circular(10),
+                        margin: const EdgeInsets.symmetric(vertical: 5),
+                        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: isMe ? Colors.red : Colors.grey[700],
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                msg.content,
+                                style: const TextStyle(color: Colors.white, fontSize: 16),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                msg.timestamp.split('T').last.substring(0, 5),
+                                style: const TextStyle(color: Colors.white54, fontSize: 10),
+                              ),
+                            ],
+                          ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              msg.content,
-                              style: const TextStyle(color: Colors.white, fontSize: 16),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              msg.timestamp.split('T').last.substring(0, 5),
-                              style: const TextStyle(color: Colors.white54, fontSize: 10),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ));
-                  },
+                      ));
+                    },
+                  ),
                 ),
               ),
             ),
-          ),
-          SizedBox(height: height_ * 0.01),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
-            width: width_ * 0.95,
-            decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 48, 48, 48),
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    style: const TextStyle(color: Colors.white),
-                    controller: _ctrl,
-                    decoration: const InputDecoration(
-                      hintText: 'Type or speak a message',
-                      hintStyle: TextStyle(color: Colors.white54),
-                      border: InputBorder.none,
+            SizedBox(height: height_ * 0.01),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              width: width_ * 0.95,
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 48, 48, 48),
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      style: const TextStyle(color: Colors.white),
+                      controller: _ctrl,
+                      decoration: const InputDecoration(
+                        hintText: 'Type or speak a message',
+                        hintStyle: TextStyle(color: Colors.white54),
+                        border: InputBorder.none,
+                      ),
                     ),
                   ),
-                ),
-                IconButton(
-                key: const Key("send_message_Button"),
-                  icon: const Icon(Icons.send, color: Colors.white),
-                  onPressed: () {
-                    if (_ctrl.text.isNotEmpty) {
-                      vm.sendMessage(_ctrl.text, widget.target.id, widget.isHost);
-                      _ctrl.clear();
-                    }
-                  },
-                ),
-                IconButton(
-                  key: const Key("voice_dictation_button"),
-                  icon: Icon(
-                    voiceVm.isListening ? Icons.mic : Icons.mic_none,
-                    color: voiceVm.isListening ? Colors.red : Colors.white,
+                  IconButton(
+                  key: const Key("send_message_Button"),
+                    icon: const Icon(Icons.send, color: Colors.white),
+                    onPressed: () {
+                      if (_ctrl.text.isNotEmpty) {
+                        vm.sendMessage(_ctrl.text, widget.target.id, widget.isHost);
+                        _ctrl.clear();
+                      }
+                    },
                   ),
-                  onPressed: () {
-                    if (voiceVm.isListening) {
-                      voiceVm.stopDictation();
-                    } else {
-                      voiceVm.startDictation((text) {
-                        setState(() {
-                          _ctrl.text = text;
+                  IconButton(
+                    key: const Key("voice_dictation_button"),
+                    icon: Icon(
+                      voiceVm.isListening ? Icons.mic : Icons.mic_none,
+                      color: voiceVm.isListening ? Colors.red : Colors.white,
+                    ),
+                    onPressed: () {
+                      if (voiceVm.isListening) {
+                        voiceVm.stopDictation();
+                      } else {
+                        voiceVm.startDictation((text) {
+                          setState(() {
+                            _ctrl.text = text;
+                          });
                         });
-                      });
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),/*
-          SizedBox(height: height_ * 0.01),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: width_ * 0.025),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                MessageButton('HELP'),
-                MessageButton('LOCATION'),
-                MessageButton('MEDICAL'),
-              ],
-            ),
-          ),*/
-          SizedBox(height: height_ * 0.03),
-        ],
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),/*
+            SizedBox(height: height_ * 0.01),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: width_ * 0.025),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  MessageButton('HELP'),
+                  MessageButton('LOCATION'),
+                  MessageButton('MEDICAL'),
+                ],
+              ),
+            ),*/
+            SizedBox(height: height_ * 0.03),
+          ],
+        ),
       ),
     );
   }
