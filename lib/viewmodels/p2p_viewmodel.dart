@@ -343,11 +343,14 @@ class P2PViewModel extends ChangeNotifier {
   }
 
   @override
-  void dispose() {
+  void dispose() async{
     _msgSub?.cancel();
     _peerSub?.cancel();
     _stateSub?.cancel();
 
+    final UserProfile? currentUser = await userProfileDao.getUserProfile();
+
+    await _resourceDao.ClearResources( currentUser?.name ?? "");
 
     super.dispose();
   }

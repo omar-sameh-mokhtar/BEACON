@@ -1,5 +1,6 @@
 import 'package:beacon/model/db.helper.dart';
 import 'package:beacon/model/data/Resource.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 
@@ -66,5 +67,17 @@ class ResourceDao {
       whereArgs: [id],
     );
   }
+
+
+  Future<void> ClearResources( String owner ) async {
+    for ( final resource in await getAllResources() ){
+      if ( resource.owner != owner ){
+        await deleteResource(resource.id);
+      }
+    }
+
+  }
+
+
 }
 
