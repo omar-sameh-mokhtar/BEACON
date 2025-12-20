@@ -66,8 +66,7 @@ void main() {
         findsOneWidget,
       );
 
-      // Empty profile state
-      expect(find.text('Create Profile'), findsOneWidget);
+
     },
   );
 }

@@ -2,16 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:beacon/main.dart';
 
 class FakeMyAppState extends ChangeNotifier implements MyAppState {
-  @override
-  bool isDarkMode = false;
+  bool _isDarkMode = false;
+  final List<String> _predefinedMessages = ["HELP", "LOCATION", "MEDICAL"];
 
   @override
   ThemeMode get themeMode =>
-      isDarkMode ? ThemeMode.dark : ThemeMode.light;
+      _isDarkMode ? ThemeMode.dark : ThemeMode.light;
+
+  @override
+  bool get isDarkMode => _isDarkMode;
+
+  @override
+  List<String> get predefinedMessages => _predefinedMessages;
 
   @override
   Future<void> toggleTheme() async {
-    isDarkMode = !isDarkMode;
+    _isDarkMode = !_isDarkMode;
+    notifyListeners();
+  }
+
+  @override
+  Future<void> addPredefinedMessage(String message) async {
+    if (message.isEmpty) return;
+    if (_predefinedMessages.contains(message)) return;
+    _predefinedMessages.add(message);
+    notifyListeners();
+  }
+
+  @override
+  Future<void> deletePredefinedMessage(String message) async {
+    _predefinedMessages.remove(message);
     notifyListeners();
   }
 }

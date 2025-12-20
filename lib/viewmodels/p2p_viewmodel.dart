@@ -346,6 +346,7 @@ class P2PViewModel extends ChangeNotifier {
 
   @override
   void dispose() async{
+    debugPrint("--------------------------------[DEBUG] Disposing P2PViewModel+++++++++++++++++++++++++++++");
     _msgSub?.cancel();
     _peerSub?.cancel();
     _stateSub?.cancel();
@@ -358,7 +359,10 @@ class P2PViewModel extends ChangeNotifier {
   }
 
   Future<void> disconnect(bool isHost) async {
-    
+    final UserProfile? currentUser = await userProfileDao.getUserProfile();
+
+    await _resourceDao.ClearResources( currentUser?.name ?? "");
+    debugPrint("--------------------------------[DEBUG] Disposing P2PViewModel+++++++++++++++++++++++++++++");
       if (isHost) {
         await _service.hostInterface.removeGroup();
         await _service.hostInterface.dispose();

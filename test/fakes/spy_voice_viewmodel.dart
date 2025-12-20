@@ -3,10 +3,9 @@ import 'package:beacon/viewmodels/voice_viewmodel.dart';
 import 'package:beacon/viewmodels/p2p_viewmodel.dart';
 import 'fake_p2p_viewmodel.dart';
 
-class SpyVoiceViewModel extends ChangeNotifier
-    implements VoiceViewModel {
-
+class SpyVoiceViewModel extends ChangeNotifier implements VoiceViewModel {
   bool _isListening = false;
+
   bool toggleCalled = false;
   bool speakCalled = false;
   bool startDictationCalled = false;
@@ -21,13 +20,18 @@ class SpyVoiceViewModel extends ChangeNotifier
   P2PViewModel get p2pVM => _p2pVM;
 
   @override
-  void toggleListening(BuildContext context) {
+  void toggleListening(
+      BuildContext context,
+      {Function(String)? onActionTriggered}
+      ) {
     toggleCalled = true;
     _isListening = !_isListening;
     notifyListeners();
-  }
 
-  // ===== methods المطلوبة =====
+    if (onActionTriggered != null) {
+      onActionTriggered("test");
+    }
+  }
 
   @override
   void startDictation(Function(String) onTextReceived) {
@@ -35,7 +39,6 @@ class SpyVoiceViewModel extends ChangeNotifier
     _isListening = true;
     notifyListeners();
 
-    // fake text
     onTextReceived("test message");
   }
 
@@ -51,4 +54,3 @@ class SpyVoiceViewModel extends ChangeNotifier
     speakCalled = true;
   }
 }
-
