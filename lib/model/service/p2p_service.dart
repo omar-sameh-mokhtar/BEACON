@@ -18,7 +18,7 @@ class P2PService {
   
   Future<bool> ensurePermissions() async {
     if (!await hostInterface.checkP2pPermissions()) {
-      await hostInterface.askP2pPermissions();
+      hostInterface.askP2pPermissions();
     }
 
     Map<Permission, PermissionStatus> statuses = await [
@@ -37,13 +37,13 @@ class P2PService {
 
   Future<void> ensureServices() async {
     if (!await hostInterface.checkLocationEnabled()) {
-      await hostInterface.enableLocationServices();
+      hostInterface.enableLocationServices();
     }
     if (!await hostInterface.checkWifiEnabled()) {
-      await hostInterface.enableWifiServices();
+      hostInterface.enableWifiServices();
     }
     if (!await hostInterface.checkBluetoothEnabled()) {
-    await hostInterface.enableBluetoothServices();
+    hostInterface.enableBluetoothServices();
   }
   }
 
