@@ -257,7 +257,7 @@ class P2PViewModel extends ChangeNotifier {
 
         NotificationService.showAlert(
           "New Message",
-          msg,
+          message,
           'chat_channel'
         );
       }
