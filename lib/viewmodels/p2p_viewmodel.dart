@@ -190,7 +190,7 @@ class P2PViewModel extends ChangeNotifier {
           realId + msg.startsWith("ID|").toString(),
           'chat_channel'
         );*/
-      }else if( msg.startsWith("SYNC|") && !isHost){
+      }else if( msg.startsWith("SYNC|") ){
         final data = jsonDecode(msg.substring(5));
 
         for (final r in data) {
@@ -379,7 +379,7 @@ class P2PViewModel extends ChangeNotifier {
       localResources.map((r) => r.toMap()).toList(),
     )}";
 
-    _service.hostInterface.broadcastText(msg);
+    sendBroadcast(msg);
       NotificationService.showAlert(
           "Sent sync Message",
           msg,
