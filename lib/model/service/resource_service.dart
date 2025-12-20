@@ -47,6 +47,17 @@ class ResourceDao {
     );
   }
 
+  Future<void> upsertResource(Resource resource) async {
+    final db = await _db.database;
+
+    await db.insert(
+      'resources',
+      resource.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+
   Future<void> deleteResource(int id) async {
     final db = await _db.database;
     await db.delete(

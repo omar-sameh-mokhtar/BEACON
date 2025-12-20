@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 //import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../model/data/Resource.dart';
 import '../model/service/notification_service.dart';
 import 'package:flutter_p2p_connection/flutter_p2p_connection.dart';
 import 'dart:async';
@@ -12,6 +15,8 @@ import '../model/data/Message.dart';
 import '../model/data/Device.dart';
 import 'package:collection/collection.dart';
 
+import '../model/service/resource_service.dart';
+
 class P2PViewModel extends ChangeNotifier {
 
   String myId = 'unknown-device';
@@ -19,6 +24,9 @@ class P2PViewModel extends ChangeNotifier {
   final ConnectedDeviceDao _deviceDao = ConnectedDeviceDao();
   final MessageDao _messageDao = MessageDao();
   get service => _service;
+
+  final ResourceDao _resourceDao = ResourceDao();
+
   
   bool isHost = false;
   List<P2pClientInfo> peers = [];
@@ -30,6 +38,7 @@ class P2PViewModel extends ChangeNotifier {
   StreamSubscription? _msgSub;
   StreamSubscription? _peerSub;
   StreamSubscription? _stateSub;
+
 
   Future<void> initP2P(BuildContext context, bool newHost) async {
 
@@ -77,6 +86,12 @@ class P2PViewModel extends ChangeNotifier {
       isActive = state.isActive;
       connectionStatus = state.isActive ? "Connected" : "Disconnected";
       if (state.isActive) isConnecting = false;
+
+      if (connectionStatus == "Connected") {
+        debugPrint("[CLIENT] Successfully connected. Sending join ping to host.");
+        sendJoinPing();
+      }
+
       notifyListeners();
     });
     _listenForPeers(false);
@@ -105,6 +120,7 @@ class P2PViewModel extends ChangeNotifier {
           );
           if(isHost){
             sendMessage("ID|${joiner.id}", joiner.id, isHost);
+            //sendJoinPing();
           }
           if(peers.isEmpty && !isHost){
             sendMessage("ID|${joiner.id}", joiner.id, isHost);
@@ -155,8 +171,14 @@ class P2PViewModel extends ChangeNotifier {
           String realId = parts[1];
           myId = realId;
           //String hardwareName = parts[2];
+          if( !isHost ) {
+            sendJoinPing();
+          }
+          // ID|PING|resources
+          if ( parts[2] == "PING" && isHost) {
+             SyncToCLient(realId, parts[3]);
+          }
 
-        
         //await _deviceDao.markClient(hardwareName, realId);
         //String did = await _deviceDao.getDeviceId(realId) ?? "unknown";
         /*NotificationService.showAlert(
@@ -164,6 +186,14 @@ class P2PViewModel extends ChangeNotifier {
           realId + msg.startsWith("ID|").toString(),
           'chat_channel'
         );*/
+      }else if( msg.startsWith("SYNC|") && !isHost){
+        final data = jsonDecode(msg.substring(5));
+
+        for (final r in data) {
+          await _resourceDao.upsertResource(Resource.fromMap(r));
+        }
+
+        notifyListeners();
       }
       else {
         List<String> parts = msg.split('|');
@@ -289,6 +319,53 @@ class P2PViewModel extends ChangeNotifier {
       
       notifyListeners();
     
+  }
+
+  Future<void> SyncToCLient(String ClientID, String resources_msg) async {
+    try {
+      final List<dynamic> decoded = jsonDecode(resources_msg);
+      final List<Resource> incomingResources =
+      decoded.map((e) => Resource.fromMap(e)).toList();
+
+      for (final resource in incomingResources) {
+        await _resourceDao.addResource(resource);
+      }
+
+      debugPrint(
+        "[HOST] Synced ${incomingResources.length} resources from client $ClientID",
+      );
+
+      await sync_broadcast();
+
+    } catch (e, stack) {
+      debugPrint("[HOST][ERROR] Failed syncing resources: $e");
+      debugPrint(stack.toString());
+    }
+    notifyListeners();
+  }
+
+
+  Future<void> sync_broadcast() async {
+    final List<Resource> localResources = await _resourceDao.getAllResources();
+
+    String msg =  "SYNC|${jsonEncode(
+      localResources.map((r) => r.toMap()).toList(),
+    )}";
+
+    _service.hostInterface.broadcastText(msg);
+
+  }
+
+
+  Future<void> sendJoinPing() async {
+    final List<Resource> localResources =
+    await _resourceDao.getAllResources();
+
+    final String msg = "$myId|PING|${jsonEncode(
+      localResources.map((r) => r.toMap()).toList(),
+    )}";
+
+    _service.clientInterface.broadcastText(msg);
   }
 
 

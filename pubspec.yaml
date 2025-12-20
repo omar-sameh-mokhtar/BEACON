@@ -41,7 +41,7 @@ dependencies:
   sqflite_sqlcipher: ^3.4.0
   flutter_secure_storage: ^9.2.4
   device_info_plus: 9.1.2
-
+  collection: ^1.18.0
   flutter_p2p_connection: ^3.0.2
 
   speech_to_text: ^7.3.0
