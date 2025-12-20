@@ -163,6 +163,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
       ) {
 
     final profile = context.watch<ProfileViewModel>();
+    final p2pvm = context.watch<P2PViewModel>();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -256,7 +257,8 @@ class _ResourcesPageState extends State<ResourcesPage> {
                 icon: const Icon(Icons.send),
                 label: const Text('Request Resource'),
                 onPressed: () {
-                  _showRequestDialog(context, vm, item);
+                  p2pvm.requestResource(item, profile.owner ?? "ay7aga");
+                  debugPrint("++++++++++++++++++++++++ request resource ${profile.owner} +++++++++++++++++++");
                 },
               ),
             ),
@@ -273,8 +275,8 @@ class _ResourcesPageState extends State<ResourcesPage> {
       Resource resource,
       ) {
     final controller = TextEditingController();
-    final p2pVM = context.watch<P2PViewModel>();
-    final profile = context.watch<ProfileViewModel>();
+    final p2pVM = Provider.of<P2PViewModel>(context, listen: false);
+    final profile = Provider.of<ProfileViewModel>(context, listen: false);
 
     showDialog(
       context: context,
@@ -349,7 +351,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
                           backgroundColor: Colors.red,
                         ),
                         onPressed: () {
-                          p2pVM.requestResource(resource, controller.text, profile.owner);
+                          p2pVM.requestResource(resource, profile.owner);
                           Navigator.pop(context);
                         },
                         child: const Text('Send'),
