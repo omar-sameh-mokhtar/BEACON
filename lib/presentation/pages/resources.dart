@@ -239,7 +239,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
             style: const TextStyle(color: Colors.white70),
           ),
 
-          if (item.isMine) ...[
+          if (!item.isMine) ...[
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,

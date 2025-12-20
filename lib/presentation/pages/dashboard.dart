@@ -205,7 +205,7 @@ class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                     padding: EdgeInsets.symmetric(vertical: 14)),
-                onPressed: () {},
+                onPressed: () => _showBroadcastDialog(context),
                 child: Text("Send Broadcast Message",
                     style: TextStyle(color: Colors.white)),
               ),
@@ -217,4 +217,93 @@ class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
       bottomNavigationBar: NavigationBarBottom(currentIndex: 0)
     );
   }
+
+  void _showBroadcastDialog(BuildContext context) {
+    final TextEditingController msgController = TextEditingController();
+    final p2pVM = context.read<P2PViewModel>();
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) {
+        return Dialog(
+          backgroundColor: Colors.grey[900],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ===== Title =====
+                Text(
+                  "Broadcast Message",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 12),
+
+                // ===== Input =====
+                TextField(
+                  controller: msgController,
+                  maxLines: 3,
+                  style: TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: "Type your message...",
+                    hintStyle: TextStyle(color: Colors.grey),
+                    filled: true,
+                    fillColor: Colors.black,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: 16),
+
+                // ===== Buttons =====
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text("Cancel", style: TextStyle(color: Colors.grey)),
+                    ),
+                    SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: () async {
+                        final msg = msgController.text.trim();
+                        if (msg.isEmpty) return;
+
+                        await p2pVM.sendBroadcast(msg);
+                        Navigator.pop(context);
+                      },
+                      child: Text("Send", style: TextStyle(color: Colors.white)),
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+
+
+
 }
+
