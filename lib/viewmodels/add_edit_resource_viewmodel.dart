@@ -37,7 +37,7 @@ class AddEditResourceViewModel extends ChangeNotifier {
         quantity: quantity,
         note: note,
         requesterId: "",
-        owner: user?.name ?? "Me",
+        owner: user?.name ?? "",
         status: 'available',
         isRequested: false,
         isMine: true,

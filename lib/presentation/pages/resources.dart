@@ -7,6 +7,7 @@ import 'package:beacon/presentation/widgets/AppBarTop.dart';
 import 'package:beacon/presentation/widgets/NavigationBarBottom.dart';
 import 'package:beacon/presentation/widgets/FloatingVoiceButton.dart';
 
+import '../../viewmodels/ProfileViewModel.dart';
 import '../../viewmodels/p2p_viewmodel.dart';
 import '../../viewmodels/resources_viewmodel.dart';
 
@@ -160,6 +161,9 @@ class _ResourcesPageState extends State<ResourcesPage> {
       ResourcesViewModel vm,
       Resource item,
       ) {
+
+    final profile = context.watch<ProfileViewModel>();
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -174,7 +178,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
           Row(
             children: [
               Icon(
-                item.isMine
+                profile.owner == item.owner
                     ? Icons.person
                     : Icons.volunteer_activism,
                 color: Colors.red,
@@ -184,7 +188,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
 
               Expanded(
                 child: Text(
-                  item.isMine && false
+                  profile.owner == item.owner
                       ? 'My Resource'
                       : 'From ${item.owner?.isNotEmpty == true ? item.owner! : 'Anonymous'}',
                   style: const TextStyle(
@@ -194,7 +198,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
                 ),
               ),
 
-              if (item.isMine)
+              if (profile.owner == item.owner)
                 Row(
                   children: [
                     IconButton(
@@ -240,7 +244,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
             style: const TextStyle(color: Colors.white70),
           ),
 
-          if (!item.isMine) ...[
+          if (item.owner!= profile.owner) ...[
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -269,6 +273,8 @@ class _ResourcesPageState extends State<ResourcesPage> {
       Resource resource,
       ) {
     final controller = TextEditingController();
+    final p2pVM = context.watch<P2PViewModel>();
+    final profile = context.watch<ProfileViewModel>();
 
     showDialog(
       context: context,
@@ -343,7 +349,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
                           backgroundColor: Colors.red,
                         ),
                         onPressed: () {
-                          // vm.requestResource(resource, controller.text);
+                          p2pVM.requestResource(resource, controller.text, profile.owner);
                           Navigator.pop(context);
                         },
                         child: const Text('Send'),

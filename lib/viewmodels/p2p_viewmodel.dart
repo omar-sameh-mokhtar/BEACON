@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:beacon/model/data/UserProfile.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 //import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../model/data/Resource.dart';
 import '../model/service/notification_service.dart';
@@ -16,6 +18,8 @@ import '../model/data/Device.dart';
 import 'package:collection/collection.dart';
 
 import '../model/service/resource_service.dart';
+import '../model/service/user_profile_service.dart';
+import 'ProfileViewModel.dart';
 
 class P2PViewModel extends ChangeNotifier {
 
@@ -24,6 +28,7 @@ class P2PViewModel extends ChangeNotifier {
   final ConnectedDeviceDao _deviceDao = ConnectedDeviceDao();
   final MessageDao _messageDao = MessageDao();
   get service => _service;
+  final UserProfileDao userProfileDao = UserProfileDao();
 
   final ResourceDao _resourceDao = ResourceDao();
 
@@ -41,7 +46,7 @@ class P2PViewModel extends ChangeNotifier {
   StreamSubscription? _msgSub;
   StreamSubscription? _peerSub;
   StreamSubscription? _stateSub;
-
+  String owner = "";
 
   Future<void> initP2P(BuildContext context, bool newHost) async {
 
@@ -55,7 +60,6 @@ class P2PViewModel extends ChangeNotifier {
     if (!context.mounted) return;
     
     startP2P(newHost);
-    
   }
 
   void startP2P(bool isHost) async {
@@ -157,11 +161,15 @@ class P2PViewModel extends ChangeNotifier {
     _msgSub = _service.getMessageStream(isHost).listen((msg) async {
       
       if (msg.startsWith("REQ:")) {
-        NotificationService.showAlert(
-          "Resource Request",
-          msg.substring(4),
-          'resource_channel'
-        );
+        final UserProfile? currentUser = await userProfileDao.getUserProfile();
+
+        if( currentUser?.name == msg.split(":")[1]) {
+          NotificationService.showAlert(
+              "Resource Request from ${msg.split(":")[2]}",
+              msg.substring(4),
+              'resource_channel'
+          );
+        }
       }else if(msg.startsWith("PR|")){
         NotificationService.showAlert(
           "providing res",
@@ -471,7 +479,7 @@ class P2PViewModel extends ChangeNotifier {
     } else {
       await _service.clientInterface.broadcastText('${senderId}|${text}'); 
     }
-;
+
     Message newMessage = Message(
       senderDeviceId: senderId,
       receiverDeviceId: "ALL",
@@ -485,7 +493,12 @@ class P2PViewModel extends ChangeNotifier {
 
     await refreshMessages('ALL');
     updateLastMessageSummary('ALL');
-      
+  }    
+  
+  // REQ:resourceOwner:requester
+  Future<void> requestResource(Resource resource, String text, String name) async{
+      await sendBroadcast("REQ:${resource.owner}:$name");
   }
+
 
 }
