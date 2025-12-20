@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../model/data/Resource.dart';
 import '../../viewmodels/add_edit_resource_viewmodel.dart';
+import '../../viewmodels/p2p_viewmodel.dart';
 
 class AddOrEditResourcePage extends StatefulWidget {
   final String resourceType;
@@ -48,6 +49,8 @@ class _AddOrEditResourcePageState
   @override
   Widget build(BuildContext context) {
     final vm = context.read<AddEditResourceViewModel>();
+    final p2pVM = context.read<P2PViewModel>();
+
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -148,6 +151,7 @@ class _AddOrEditResourcePageState
                     int.parse(_quantityController.text),
                     note: _noteController.text,
                   );
+                  await p2pVM.sync_broadcast();
 
                   Navigator.pop(context, true);
                 },

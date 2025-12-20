@@ -218,6 +218,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
                           color: Colors.white, size: 20),
                       onPressed: () {
                         vm.deleteResource(item.id);
+                        context.watch<P2PViewModel>().broadcastDeleteResource(item.id);
                       },
                     ),
                   ],

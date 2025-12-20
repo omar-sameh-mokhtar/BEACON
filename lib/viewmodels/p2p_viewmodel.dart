@@ -190,7 +190,7 @@ class P2PViewModel extends ChangeNotifier {
           realId + msg.startsWith("ID|").toString(),
           'chat_channel'
         );*/
-      }else if( msg.startsWith("SYNC|") && !isHost){
+      }else if( msg.startsWith("SYNC|") ){
         final data = jsonDecode(msg.substring(5));
 
         for (final r in data) {
@@ -204,6 +204,20 @@ class P2PViewModel extends ChangeNotifier {
         );
 
         notifyListeners();
+      }else if (msg.startsWith("DELETE_RES|")) {
+        try {
+          final int resourceId = int.parse(msg.substring(11));
+          await _resourceDao.deleteResource(resourceId);
+
+          NotificationService.showAlert(
+              "Resource Synced",
+              "Resource with ID $resourceId has been deleted.",
+              'resource_channel'
+          );
+
+        } catch (e) {
+          debugPrint("[ERROR] Failed to parse resource ID for deletion: $e");
+        }
       }
       else {
         List<String> parts = msg.split('|');
@@ -379,7 +393,7 @@ class P2PViewModel extends ChangeNotifier {
       localResources.map((r) => r.toMap()).toList(),
     )}";
 
-    _service.hostInterface.broadcastText(msg);
+    sendBroadcast(msg);
       NotificationService.showAlert(
           "Sent sync Message",
           msg,
@@ -420,6 +434,17 @@ class P2PViewModel extends ChangeNotifier {
     } else {
       await _service.clientInterface.broadcastText(message);
     }
+  }
+
+  Future<void> broadcastDeleteResource(int resourceId) async {
+    final String msg = "DELETE_RES|$resourceId";
+    await sendBroadcast(msg);
+
+    NotificationService.showAlert(
+        "Broadcasting Deletion",
+        "Sent delete command for resource ID: $resourceId",
+        'resource_channel'
+    );
   }
 
 }
