@@ -9,7 +9,7 @@ class VoiceViewModel extends ChangeNotifier {
   
   bool get isListening => _isListening;
  
-  void toggleListening(BuildContext context) async {
+  void toggleListening(BuildContext context, {Function(String)? onActionTriggered}) async {
     if (_isListening) {
       _service.stop();
       _isListening = false;
@@ -18,14 +18,26 @@ class VoiceViewModel extends ChangeNotifier {
       if (available) {
         _isListening = true;
         _service.listen(onResult: (text) {
-          _handleVoiceCommands(text.toLowerCase(), context);
+          _handleVoiceCommands(text.toLowerCase(), context, onActionTriggered);
         });
       }
     }
     notifyListeners();
   }
 
-  void _handleVoiceCommands(String command, BuildContext context) {
+  void _handleVoiceCommands(String command, BuildContext context, Function(String)? onActionTriggered) {
+    
+    List<String> validCommands = ["broadcast"];
+    for (var cmd in validCommands) {
+      if (command.contains(cmd)) {
+        _service.speak("Executing $cmd");
+        toggleListening(context); 
+        
+        if (onActionTriggered != null) onActionTriggered(cmd); 
+        return;
+      }
+    }
+
     
     if (command.contains("start")) {
       _service.speak("Starting communication");
@@ -40,7 +52,7 @@ class VoiceViewModel extends ChangeNotifier {
       p2pVM.initP2P(context, false);
       context.goNamed('dashboard', pathParameters: {'isHost': '${p2pVM.isHost}'});
     }
-    else if(command.contains("resources")){
+    if(command.contains("resources")){
       _service.speak("Navigate to resources ");
       toggleListening(context);
       context.go('/resources');
@@ -48,16 +60,22 @@ class VoiceViewModel extends ChangeNotifier {
 
     }
     else if (command.contains("profile")) {
-      _service.speak("Navigate to profile ");
+      _service.speak("Navigate to profile");
       toggleListening(context);
       context.go('/profile');
     }
 
     else if (command.contains("dashboard")) {
-      _service.speak("Navigate to dashboard ");
+      _service.speak("Navigate to dashboard");
       toggleListening(context);
       context.goNamed('dashboard', pathParameters: {'isHost': '${p2pVM.isHost}'}); 
     }
+/*
+    else if (command.contains("broadcast")) {
+      _service.speak("Send broadcast message");
+      toggleListening(context);
+      context.goNamed('dashboard', pathParameters: {'isHost': '${p2pVM.isHost}'}); 
+    }*/
 
 
 

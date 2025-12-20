@@ -109,7 +109,11 @@ class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
           ],
         ),
       ),
-      floatingActionButton: Floatingvoicebutton(centre: false),
+      floatingActionButton: Floatingvoicebutton(centre: false, onVoiceAction: (action) {
+        if (action == "broadcast") {
+          _showBroadcastDialog(context);
+        }
+      },),
       bottomNavigationBar: NavigationBarBottom(currentIndex: 0)
     );
   }

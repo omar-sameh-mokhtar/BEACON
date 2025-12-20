@@ -60,7 +60,7 @@ class ChattingPageState extends State<ChattingPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Center(
+          /*Center(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 15),
               height: height_ * 0.07,
@@ -77,7 +77,7 @@ class ChattingPageState extends State<ChattingPage> {
                 ],
               ),
             ),
-          ),
+          ),*/
           
           SizedBox(height: height_ * 0.01),
           Expanded(

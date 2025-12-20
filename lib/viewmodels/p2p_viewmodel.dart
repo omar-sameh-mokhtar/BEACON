@@ -114,11 +114,11 @@ class P2PViewModel extends ChangeNotifier {
           (n) => !peers.any((p) => p.id == n.id),
           //orElse: () => list.last,
         );
-          /*NotificationService.showAlert(
+          NotificationService.showAlert(
             "Network Update", 
-            "${joiner.username} has joined. ${joiner.isHost ? 'HOST' : 'CLIENT'}", 
+            "${joiner.username} has joined.", 
             'client_channel'
-          );*/
+          );
           if(isHost){
             sendMessage("ID|${joiner.id}", joiner.id, isHost);
           }
@@ -171,11 +171,11 @@ class P2PViewModel extends ChangeNotifier {
           );
         }
       }else if(msg.startsWith("PR|")){
-        NotificationService.showAlert(
+        /*NotificationService.showAlert(
           "providing res",
           "y",
           'chat_channel'
-        );
+        );*/
         final parts = msg.split('|');
         String clientId = parts[1];
         String resources = parts.sublist(2).join('|');
@@ -206,11 +206,11 @@ class P2PViewModel extends ChangeNotifier {
           await _resourceDao.upsertResource(Resource.fromMap(r));
         }
 
-        NotificationService.showAlert(
+        /*NotificationService.showAlert(
           "upserting Resources",
           "ye",
           'chat_channel'
-        );
+        );*/
 
         notifyListeners();
       }else if (msg.startsWith("DELETE_RES|")) {
@@ -220,7 +220,7 @@ class P2PViewModel extends ChangeNotifier {
 
           NotificationService.showAlert(
               "Resource Synced",
-              "Resource with ID $resourceId has been deleted.",
+              "Resource has been deleted.",
               'resource_channel'
           );
 
@@ -394,11 +394,11 @@ class P2PViewModel extends ChangeNotifier {
       final List<dynamic> decoded = jsonDecode(resources_msg);
       final List<Resource> incomingResources =
       decoded.map((e) => Resource.fromMap(e)).toList();
-      NotificationService.showAlert(
+      /*NotificationService.showAlert(
           "Saved to db",
           "yes",
           'chat_channel'
-        );
+        );*/
 
       for (final resource in incomingResources) {
         await _resourceDao.addResource(resource);
@@ -427,21 +427,21 @@ class P2PViewModel extends ChangeNotifier {
     )}";
 
     sendBroadcast(msg);
-      NotificationService.showAlert(
+      /*NotificationService.showAlert(
           "Sent sync Message",
           msg,
           'chat_channel'
-        );    
+        );  */  
 
   }
 
 
   Future<void> sendJoinPing() async {
-    NotificationService.showAlert(
+    /*NotificationService.showAlert(
           "Sent ping Message",
           "PINGGG",
           'chat_channel'
-        );
+        );*/
     final List<Resource> localResources =
     await _resourceDao.getAllResources();
 
@@ -450,11 +450,11 @@ class P2PViewModel extends ChangeNotifier {
     )}";
 
     _service.clientInterface.broadcastText(msg);
-      NotificationService.showAlert(
+      /*NotificationService.showAlert(
           "Sent ping Message",
           msg,
           'chat_channel'
-        );
+        );*/
   }
 
 
@@ -473,11 +473,11 @@ class P2PViewModel extends ChangeNotifier {
     final String msg = "DELETE_RES|$resourceId";
     await sendBroadcast(msg);
 
-    NotificationService.showAlert(
+    /*NotificationService.showAlert(
         "Broadcasting Deletion",
         "Sent delete command for resource ID: $resourceId",
         'resource_channel'
-    );
+    );*/
   }
 
 
