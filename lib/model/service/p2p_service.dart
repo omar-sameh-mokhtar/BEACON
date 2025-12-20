@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_p2p_connection/flutter_p2p_connection.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class P2PService {
 
@@ -14,15 +15,24 @@ class P2PService {
   Future<void> initHost() async => await hostInterface.initialize();
   Future<void> initClient() async => await clientInterface.initialize();
 
+  
   Future<bool> ensurePermissions() async {
     if (!await hostInterface.checkP2pPermissions()) {
       await hostInterface.askP2pPermissions();
     }
-    if (!await hostInterface.checkBluetoothPermissions()) {
-      await hostInterface.askBluetoothPermissions();
-    }
-    return await hostInterface.checkP2pPermissions() && 
-           await hostInterface.checkBluetoothPermissions();
+
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.bluetoothScan,
+      Permission.bluetoothConnect,
+      Permission.bluetoothAdvertise,
+      Permission.nearbyWifiDevices, 
+    ].request();
+
+    bool isBluetoothGranted = statuses[Permission.bluetoothConnect]!.isGranted;
+    bool isNearbyGranted = statuses[Permission.nearbyWifiDevices]!.isGranted;
+    bool isP2pGranted = await hostInterface.checkP2pPermissions();
+
+    return isP2pGranted && isBluetoothGranted && isNearbyGranted;
   }
 
   Future<void> ensureServices() async {
