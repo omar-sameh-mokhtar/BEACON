@@ -88,12 +88,6 @@ class P2PViewModel extends ChangeNotifier {
       isActive = state.isActive;
       connectionStatus = state.isActive ? "Connected" : "Disconnected";
       if (state.isActive) isConnecting = false;
-
-      if (connectionStatus == "Connected") {
-        debugPrint("[CLIENT] Successfully connected. Sending join ping to host.");
-        sendJoinPing();
-      }
-
       notifyListeners();
     });
     _listenForPeers(false);
@@ -115,14 +109,13 @@ class P2PViewModel extends ChangeNotifier {
           (n) => !peers.any((p) => p.id == n.id),
           //orElse: () => list.last,
         );
-          NotificationService.showAlert(
+          /*NotificationService.showAlert(
             "Network Update", 
             "${joiner.username} has joined. ${joiner.isHost ? 'HOST' : 'CLIENT'}", 
             'client_channel'
-          );
+          );*/
           if(isHost){
             sendMessage("ID|${joiner.id}", joiner.id, isHost);
-            //sendJoinPing();
           }
           if(peers.isEmpty && !isHost){
             sendMessage("ID|${joiner.id}", joiner.id, isHost);
@@ -168,17 +161,26 @@ class P2PViewModel extends ChangeNotifier {
           msg.substring(4),
           'resource_channel'
         );
+      }else if(msg.startsWith("PR|")){
+        NotificationService.showAlert(
+          "providing res",
+          "y",
+          'chat_channel'
+        );
+        final parts = msg.split('|');
+        String clientId = parts[1];
+        String resources = parts.sublist(2).join('|');
+          // ID|clientId|resources
+          if (isHost) {
+             SyncToClient(clientId, resources);
+          }
+
       }else if (msg.startsWith("ID|")) {
           final parts = msg.split('|');
           String realId = parts[1];
           myId = realId;
-          //String hardwareName = parts[2];
-          if( !isHost ) {
-            sendJoinPing();
-          }
-          // ID|PING|resources
-          if ( parts[2] == "PING" && isHost) {
-             SyncToCLient(realId, parts[3]);
+          if(!isHost){
+            await sendJoinPing();
           }
 
         //await _deviceDao.markClient(hardwareName, realId);
@@ -194,6 +196,12 @@ class P2PViewModel extends ChangeNotifier {
         for (final r in data) {
           await _resourceDao.upsertResource(Resource.fromMap(r));
         }
+
+        NotificationService.showAlert(
+          "upserting Resources",
+          "ye",
+          'chat_channel'
+        );
 
         notifyListeners();
       }
@@ -334,11 +342,16 @@ class P2PViewModel extends ChangeNotifier {
     
   }
 
-  Future<void> SyncToCLient(String ClientID, String resources_msg) async {
+  Future<void> SyncToClient(String ClientID, String resources_msg) async {
     try {
       final List<dynamic> decoded = jsonDecode(resources_msg);
       final List<Resource> incomingResources =
       decoded.map((e) => Resource.fromMap(e)).toList();
+      NotificationService.showAlert(
+          "Saved to db",
+          "yes",
+          'chat_channel'
+        );
 
       for (final resource in incomingResources) {
         await _resourceDao.addResource(resource);
@@ -354,6 +367,7 @@ class P2PViewModel extends ChangeNotifier {
       debugPrint("[HOST][ERROR] Failed syncing resources: $e");
       debugPrint(stack.toString());
     }
+    
     notifyListeners();
   }
 
@@ -366,56 +380,35 @@ class P2PViewModel extends ChangeNotifier {
     )}";
 
     _service.hostInterface.broadcastText(msg);
+      NotificationService.showAlert(
+          "Sent sync Message",
+          msg,
+          'chat_channel'
+        );    
 
   }
 
 
   Future<void> sendJoinPing() async {
+    NotificationService.showAlert(
+          "Sent ping Message",
+          "PINGGG",
+          'chat_channel'
+        );
     final List<Resource> localResources =
     await _resourceDao.getAllResources();
 
-    final String msg = "$myId|PING|${jsonEncode(
+    final String msg = "PR|$myId|${jsonEncode(
       localResources.map((r) => r.toMap()).toList(),
     )}";
 
     _service.clientInterface.broadcastText(msg);
+      NotificationService.showAlert(
+          "Sent ping Message",
+          msg,
+          'chat_channel'
+        );
   }
 
 
-  /*
-  void startGlobalListeners(bool isHost) {
-    final stream = isHost 
-      ? hostInterface.streamReceivedTexts() 
-      : clientInterface.streamReceivedTexts();
-
-    stream.listen((data) {
-      // 1. Check the type of data (Simple protocol: "REQ:Water" or "MSG:Hello")
-      if (data.startsWith("REQ:")) {
-        _handleResourceRequest(data.replaceFirst("REQ:", ""));
-      } else {
-        _handleChatMessage(data);
-      }
-    });
-  }
-
-  void _handleChatMessage(String msg) {
-    chatHistory.insert(0, "Peer: $msg");
-    NotificationService.showAlert("New Message", msg, 'chat_messages');
-    notifyListeners();
-  }
-
-  void _handleResourceRequest(String request) {
-    // Critical alert for resource modules
-    NotificationService.showAlert("URGENT REQUEST", "Need: $request", 'emergency_alerts');
-    // You could also add this to a separate "Requests" list here
-    notifyListeners();
-  }
-
-  Future<void> sendData(String rawData, String? targetId, bool isHost) async {
-    if (isHost) {
-      await hostInterface.sendTextToClient(rawData, targetId!);
-    } else {
-      await clientInterface.broadcastText(rawData);
-    }
-  }*/
 }

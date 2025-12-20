@@ -21,7 +21,7 @@ class DatabaseHelper {
     String? password = await secureStorage.read(key: 'db_key');
 
     if (password == null) {
-      password = DateTime.now().millisecondsSinceEpoch.toString();
+      password = "beacon_key_${DateTime.now().millisecondsSinceEpoch}";
       await secureStorage.write(key: 'db_key', value: password);
     }
 
@@ -34,13 +34,25 @@ class DatabaseHelper {
     final password = await _getDbPassword();
 
     WidgetsFlutterBinding.ensureInitialized();
-
+    try{
     return await openDatabase(
       path,
       password: password,
       version: 1,
       onCreate: _onCreate,
     );
+    } catch(e){
+      if (e.toString().contains('file is not a database') || 
+          e.toString().contains('SQLiteNotADatabaseException')) {
+      _db = null;
+      await deleteDatabase(path);
+      return await openDatabase(
+        path,
+        password: password,
+        version: 1,
+        onCreate: _onCreate,
+      );}else {rethrow;}
+    }
   }
 
   Future _onCreate(Database db, int version) async {
