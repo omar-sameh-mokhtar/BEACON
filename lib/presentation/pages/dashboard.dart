@@ -287,7 +287,7 @@ class _NetworkDashboardPageState extends State<NetworkDashboardPage> {
                         final msg = msgController.text.trim();
                         if (msg.isEmpty) return;
 
-                        await p2pVM.sendBroadcast(msg);
+                        await p2pVM.sendBroadcastMessage(msg, p2pVM.myId);
                         Navigator.pop(context);
                       },
                       child: Text("Send", style: TextStyle(color: Colors.white)),

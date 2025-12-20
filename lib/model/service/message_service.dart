@@ -45,8 +45,9 @@ class MessageDao {
     
     final List<Map<String, Object?>> result = await database.query(
       'messages',
-      where: '(sender_device_id = ? AND receiver_device_id = ?) OR (sender_device_id = ? AND receiver_device_id = ?)',
-      whereArgs: [myId, peerId, peerId, myId],
+      where: '(sender_device_id = ? AND receiver_device_id = ?) OR (sender_device_id = ? AND receiver_device_id = ?) OR (receiver_device_id = ?)',
+      
+      whereArgs: [myId, peerId, peerId, myId, "ALL"],
       orderBy: 'timestamp DESC',
     );
 
@@ -57,8 +58,9 @@ class MessageDao {
     final database = await db.database;
     final List<Map<String, Object?>> result = await database.query(
       'messages',
-      where: '(sender_device_id = ? AND receiver_device_id = ?) OR (sender_device_id = ? AND receiver_device_id = ?)',
-      whereArgs: [myId, peerId, peerId, myId],
+      where: '(sender_device_id = ? AND receiver_device_id = ?) OR (sender_device_id = ? AND receiver_device_id = ?) OR'
+      "(receiver_device_id = ?)",
+      whereArgs: [myId, peerId, peerId, myId, "ALL"],
       orderBy: 'timestamp DESC',
       limit: 1,
     );

@@ -36,6 +36,7 @@ class P2PViewModel extends ChangeNotifier {
   bool isHost = false;
   List<P2pClientInfo> peers = [];
   //List<String> chatHistory = [];
+  String? activePeerId;
   List<Message> currentChatMessages = [];
   Map<String, Message?> lastMessages = {};
   String connectionStatus = "Disconnected";
@@ -245,8 +246,14 @@ class P2PViewModel extends ChangeNotifier {
 
         _messageDao.insertMessage(newMessage);
 
-        await refreshMessages(senderId);
+        //await refreshMessages(senderId);
         updateLastMessageSummary(senderId);
+
+        if (activePeerId != null) {
+          if (senderId == activePeerId || newMessage.receiverDeviceId == "ALL") {
+            await refreshMessages(activePeerId!); 
+          }
+        }
 
         NotificationService.showAlert(
           "New Message",
@@ -323,6 +330,15 @@ class P2PViewModel extends ChangeNotifier {
   Future<void> updateLastMessageSummary(String peerId) async {
     final msg = await _messageDao.getLastMessageForPeer(myId, peerId);
     lastMessages[peerId] = msg;
+    notifyListeners();
+  }
+  Future<void> loadChatWithPeer(String peerId) async {
+    activePeerId = peerId;
+    currentChatMessages = await _messageDao.getChatHistory(myId, peerId);
+    notifyListeners();
+  }void closeChat() {
+    activePeerId = null;
+    currentChatMessages = [];
     notifyListeners();
   }
 
@@ -459,10 +475,34 @@ class P2PViewModel extends ChangeNotifier {
     );
   }
 
+
+  Future<void> sendBroadcastMessage(String text, String senderId) async {
+
+    if (isHost) {
+      await _service.hostInterface.broadcastText('${senderId}|${text}');
+    } else {
+      await _service.clientInterface.broadcastText('${senderId}|${text}'); 
+    }
+
+    Message newMessage = Message(
+      senderDeviceId: senderId,
+      receiverDeviceId: "ALL",
+      messageType: "broadcast",
+      content: text,
+      timestamp: DateTime.now().toIso8601String(),
+      delivered: 0,
+    );
+  
+    _messageDao.insertMessage(newMessage);
+
+    await refreshMessages('ALL');
+    updateLastMessageSummary('ALL');
+  }    
+  
   // REQ:resourceOwner:requester
   Future<void> requestResource(Resource resource, String name) async{
       await sendBroadcast("REQ:${resource.owner}:$name");
   }
 
-}
 
+}
