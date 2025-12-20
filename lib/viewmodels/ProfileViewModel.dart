@@ -14,6 +14,8 @@ class ProfileViewModel extends ChangeNotifier {
 
   bool get hasProfile => profile != null;
 
+  get owner => profile?.name;
+
   Future<void> loadProfile() async {
     final user = await _dao.getUserProfile();
     if (user != null) {
