@@ -53,10 +53,12 @@ dependencies:
   flutter_local_notifications: ^19.5.0
 
 dev_dependencies:
-  sqflite_common_ffi: ^2.3.6
   flutter_launcher_icons: ^0.13.1
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
+
 
 
   # The "flutter_lints" package below contains a set of recommended lints to

@@ -351,7 +351,7 @@ class P2PViewModel extends ChangeNotifier {
     final UserProfile? currentUser = await userProfileDao.getUserProfile();
 
     await _resourceDao.ClearResources( currentUser?.name ?? "");
-
+    debugPrint("--------------------------------[DEBUG] Disposing P2PViewModel+++++++++++++++++++++++++++++");
     super.dispose();
   }
 

@@ -8,6 +8,9 @@ class SpyVoiceViewModel extends ChangeNotifier
 
   bool _isListening = false;
   bool toggleCalled = false;
+  bool speakCalled = false;
+  bool startDictationCalled = false;
+  bool stopDictationCalled = false;
 
   final P2PViewModel _p2pVM = FakeP2PViewModel();
 
@@ -23,4 +26,29 @@ class SpyVoiceViewModel extends ChangeNotifier
     _isListening = !_isListening;
     notifyListeners();
   }
+
+  // ===== methods المطلوبة =====
+
+  @override
+  void startDictation(Function(String) onTextReceived) {
+    startDictationCalled = true;
+    _isListening = true;
+    notifyListeners();
+
+    // fake text
+    onTextReceived("test message");
+  }
+
+  @override
+  void stopDictation() {
+    stopDictationCalled = true;
+    _isListening = false;
+    notifyListeners();
+  }
+
+  @override
+  Future<void> speakMessage(String text) async {
+    speakCalled = true;
+  }
 }
+

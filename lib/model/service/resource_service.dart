@@ -70,8 +70,10 @@ class ResourceDao {
 
 
   Future<void> ClearResources( String owner ) async {
+    debugPrint("--------------------------------[DEBUG] Clearing resources from db ++++++++++++++++++++++++++++++"+owner);
     for ( final resource in await getAllResources() ){
       if ( resource.owner != owner ){
+        debugPrint("--------------------------------[DEBUG] Deleting resource from db +++++++++++++++++++++++++++++"+owner);
         await deleteResource(resource.id);
       }
     }
