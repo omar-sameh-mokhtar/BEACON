@@ -382,7 +382,20 @@ class P2PViewModel extends ChangeNotifier {
   }
 
 
-  /*
+
+  Future<void> sendBroadcast(String message) async {
+    if (!isActive) return;
+
+    if (isHost) {
+      await _service.hostInterface.broadcastText(message);
+    } else {
+      await _service.clientInterface.broadcastText(message);
+    }
+  }
+
+
+
+/*
   void startGlobalListeners(bool isHost) {
     final stream = isHost 
       ? hostInterface.streamReceivedTexts() 

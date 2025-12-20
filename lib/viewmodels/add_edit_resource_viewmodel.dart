@@ -43,6 +43,7 @@ class AddEditResourceViewModel extends ChangeNotifier {
       );
 
       await _resourceDao.addResource(resource);
+
     }
   }
 }
