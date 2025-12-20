@@ -16,8 +16,16 @@ import 'package:go_router/go_router.dart';
 
 import 'viewmodels/voice_viewmodel.dart';
 import 'viewmodels/p2p_viewmodel.dart';
+import 'package:flutter/services.dart';
 
-void main() {
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
   runApp(
     MultiProvider(
       providers: [
