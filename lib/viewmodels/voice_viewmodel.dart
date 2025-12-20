@@ -53,4 +53,27 @@ class VoiceViewModel extends ChangeNotifier {
 
 
   }
+
+
+  void startDictation(Function(String) onTextReceived) async {
+    bool available = await _service.init();
+    if (available) {
+      _isListening = true;
+      notifyListeners();
+      
+      _service.listen(onResult: (text) {
+        onTextReceived(text); // Pass the text back to the ChattingPage
+      });
+    }
+  }
+
+  void stopDictation() {
+    _service.stop();
+    _isListening = false;
+    notifyListeners();
+  }
+
+  Future<void> speakMessage(String text) async {
+    await _service.speak(text);
+  }
 }
