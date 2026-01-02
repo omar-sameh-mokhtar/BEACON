@@ -181,7 +181,11 @@ class P2PViewModel extends ChangeNotifier {
         String resources = parts.sublist(2).join('|');
           // ID|clientId|resources
           if (isHost) {
-             SyncToClient(clientId, resources);
+            // host will clear outdated resources first
+            final UserProfile? currentUser = await userProfileDao.getUserProfile();
+            await _resourceDao.ClearResources( currentUser?.name ?? "");
+
+            SyncToClient(clientId, resources);
           }
 
       }else if (msg.startsWith("ID|")) {
@@ -446,6 +450,12 @@ class P2PViewModel extends ChangeNotifier {
           "PINGGG",
           'chat_channel'
         );*/
+
+    // client will clear outdated resources first
+    final UserProfile? currentUser = await userProfileDao.getUserProfile();
+
+    await _resourceDao.ClearResources( currentUser?.name ?? "");
+
     final List<Resource> localResources =
     await _resourceDao.getAllResources();
 
