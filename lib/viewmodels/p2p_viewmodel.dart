@@ -32,7 +32,7 @@ class P2PViewModel extends ChangeNotifier {
 
   final ResourceDao _resourceDao = ResourceDao();
 
-  
+
   bool isHost = false;
   List<P2pClientInfo> peers = [];
   //List<String> chatHistory = [];
@@ -42,7 +42,7 @@ class P2PViewModel extends ChangeNotifier {
   String connectionStatus = "Disconnected";
   bool isActive = false;
   bool isConnecting = false;
-  
+
   StreamSubscription? _msgSub;
   StreamSubscription? _peerSub;
   StreamSubscription? _stateSub;
@@ -51,14 +51,14 @@ class P2PViewModel extends ChangeNotifier {
   Future<void> initP2P(BuildContext context, bool newHost) async {
 
     if(isActive && !isHost && !newHost) return; // Already connected as client and pressed join again -> navigate back without changes
-    if(isActive){ 
+    if(isActive){
       await disconnect(isHost);
     }
     _service.ensurePermissions();
     _service.ensureServices();
 
     if (!context.mounted) return;
-    
+
     startP2P(newHost);
   }
 
@@ -99,39 +99,39 @@ class P2PViewModel extends ChangeNotifier {
     _listenForMessages(false);
   }
 
-  
+
 
   void _listenForPeers(bool isHost) {
 
     final listEquals = const IterableEquality().equals;
 
     _peerSub = _service
-      .getPeerStream(isHost)
-      .distinct((prev, next) => listEquals(prev, next))
-      .listen((list) async{
-        if (list.length > peers.length) {
-          final joiner = list.firstWhere(
-          (n) => !peers.any((p) => p.id == n.id),
+        .getPeerStream(isHost)
+        .distinct((prev, next) => listEquals(prev, next))
+        .listen((list) async{
+      if (list.length > peers.length) {
+        final joiner = list.firstWhere(
+              (n) => !peers.any((p) => p.id == n.id),
           //orElse: () => list.last,
         );
-          NotificationService.showAlert(
-            "Network Update", 
-            "${joiner.username} has joined.", 
+        NotificationService.showAlert(
+            "Network Update",
+            "${joiner.username} has joined.",
             'client_channel'
-          );
-          if(isHost){
-            sendMessage("ID|${joiner.id}", joiner.id, isHost);
-          }
-          if(peers.isEmpty && !isHost){
-            sendMessage("ID|${joiner.id}", joiner.id, isHost);
-          }/*else{
+        );
+        if(isHost){
+          sendMessage("ID|${joiner.id}", joiner.id, isHost);
+        }
+        if(peers.isEmpty && !isHost){
+          sendMessage("ID|${joiner.id}", joiner.id, isHost);
+        }/*else{
             sendMessage("ID|${joiner.id}", joiner.id, isHost);
           }*/
-          /*
+        /*
           Device shadow = Device(
             id: joiner.id,
             deviceId: "unknown",
-            name: joiner.username, 
+            name: joiner.username,
             lastSeen: DateTime.now().toIso8601String(),
             firstDiscovered: DateTime.now().toIso8601String(),
             connectionStatus: "identifying",
@@ -139,27 +139,27 @@ class P2PViewModel extends ChangeNotifier {
           );
           await _deviceDao.insertConnectedDevice(shadow);
           */
-        } 
-        else if (list.length < peers.length) {
-          final leaver = peers.firstWhere(
-          (p) => !list.any((n) => n.id == p.id),
+      }
+      else if (list.length < peers.length) {
+        final leaver = peers.firstWhere(
+              (p) => !list.any((n) => n.id == p.id),
           orElse: () => peers.first,
         );
-          NotificationService.showAlert(
-            "Network Update", 
-            "${leaver.username} has left the network.", 
+        NotificationService.showAlert(
+            "Network Update",
+            "${leaver.username} has left the network.",
             'client_channel'
-          );
-        }
+        );
+      }
 
-        peers = list;
-        notifyListeners();
-      });
+      peers = list;
+      notifyListeners();
+    });
   }
 
   void _listenForMessages(bool isHost) {
     _msgSub = _service.getMessageStream(isHost).listen((msg) async {
-      
+
       if (msg.startsWith("REQ:")) {
         final UserProfile? currentUser = await userProfileDao.getUserProfile();
 
@@ -179,22 +179,22 @@ class P2PViewModel extends ChangeNotifier {
         final parts = msg.split('|');
         String clientId = parts[1];
         String resources = parts.sublist(2).join('|');
-          // ID|clientId|resources
-          if (isHost) {
-            // host will clear outdated resources first
-            final UserProfile? currentUser = await userProfileDao.getUserProfile();
-            await _resourceDao.ClearResources( currentUser?.name ?? "");
+        // ID|clientId|resources
+        if (isHost) {
+          // host will clear outdated resources first
+          final UserProfile? currentUser = await userProfileDao.getUserProfile();
+          await _resourceDao.ClearResources( currentUser?.name ?? "");
 
-            SyncToClient(clientId, resources);
-          }
+          SyncToClient(clientId, resources);
+        }
 
       }else if (msg.startsWith("ID|")) {
-          final parts = msg.split('|');
-          String realId = parts[1];
-          myId = realId;
-          if(!isHost){
-            await sendJoinPing();
-          }
+        final parts = msg.split('|');
+        String realId = parts[1];
+        myId = realId;
+        if(!isHost){
+          await sendJoinPing();
+        }
 
         //await _deviceDao.markClient(hardwareName, realId);
         //String did = await _deviceDao.getDeviceId(realId) ?? "unknown";
@@ -237,7 +237,7 @@ class P2PViewModel extends ChangeNotifier {
 
         String senderId = parts[0];
         String message = parts.sublist(1).join('|');
-        
+
 
         Message newMessage = Message(
           senderDeviceId: senderId,
@@ -255,14 +255,14 @@ class P2PViewModel extends ChangeNotifier {
 
         if (activePeerId != null) {
           if (senderId == activePeerId || newMessage.receiverDeviceId == "ALL") {
-            await refreshMessages(activePeerId!); 
+            await refreshMessages(activePeerId!);
           }
         }
 
         NotificationService.showAlert(
-          "New Message",
-          message,
-          'chat_channel'
+            "New Message",
+            message,
+            'chat_channel'
         );
       }
     });
@@ -278,10 +278,10 @@ class P2PViewModel extends ChangeNotifier {
         final target = devices.first;
         connectionStatus = "Auto-joining ${target.deviceName}...";
         notifyListeners();
-        
+
         await _service.clientInterface.stopScan();//.then((_) {
-          _service.clientInterface.connectWithDevice(target);
-        
+        _service.clientInterface.connectWithDevice(target);
+
         isConnecting = false;
         //});
 
@@ -292,14 +292,14 @@ class P2PViewModel extends ChangeNotifier {
   Future<void> sendMessage(String text, String targetId, bool isHost) async {
     bool ok = false;
     if (!text.startsWith("ID|") && !text.startsWith("REQ:")) {
-      
+
       text = "$myId|$text";
     }
 
     if (isHost) {
       ok = await _service.hostInterface.sendTextToClient(text, targetId);
     } else {
-      ok = await _service.clientInterface.sendTextToClient(text, targetId); 
+      ok = await _service.clientInterface.sendTextToClient(text, targetId);
     }
 
     if (ok) {
@@ -315,7 +315,7 @@ class P2PViewModel extends ChangeNotifier {
           timestamp: DateTime.now().toIso8601String(),
           delivered: 0,
         );
-      
+
         _messageDao.insertMessage(newMessage);
 
         await refreshMessages(targetId);
@@ -367,33 +367,33 @@ class P2PViewModel extends ChangeNotifier {
 
     await _resourceDao.ClearResources( currentUser?.name ?? "");
     debugPrint("--------------------------------[DEBUG] Disposing P2PViewModel+++++++++++++++++++++++++++++");
-      if (isHost) {
-        await _service.hostInterface.removeGroup();
-        await _service.hostInterface.dispose();
-        //print("[DEBUG] Host: Group removed and disconnected.");
-      } else {
-        await _service.clientInterface.stopScan();
-        await _service.clientInterface.disconnect();
-        await _service.clientInterface.dispose();
-      }
-      
-      peers = [];
-      //chatHistory = [];
-      isActive = false;
-      connectionStatus = "Disconnected";
-      isHost=false;
-      isConnecting=false;
-      
-      _msgSub?.cancel();
-      _peerSub?.cancel();
-      _stateSub?.cancel();
-      _msgSub = null;
-      _peerSub = null;
-      _stateSub = null;
+    if (isHost) {
+      await _service.hostInterface.removeGroup();
+      await _service.hostInterface.dispose();
+      //print("[DEBUG] Host: Group removed and disconnected.");
+    } else {
+      await _service.clientInterface.stopScan();
+      await _service.clientInterface.disconnect();
+      await _service.clientInterface.dispose();
+    }
+
+    peers = [];
+    //chatHistory = [];
+    isActive = false;
+    connectionStatus = "Disconnected";
+    isHost=false;
+    isConnecting=false;
+
+    _msgSub?.cancel();
+    _peerSub?.cancel();
+    _stateSub?.cancel();
+    _msgSub = null;
+    _peerSub = null;
+    _stateSub = null;
 
 
 
-      notifyListeners();
+    notifyListeners();
 
   }
 
@@ -422,7 +422,7 @@ class P2PViewModel extends ChangeNotifier {
       debugPrint("[HOST][ERROR] Failed syncing resources: $e");
       debugPrint(stack.toString());
     }
-    
+
     notifyListeners();
   }
 
@@ -435,11 +435,11 @@ class P2PViewModel extends ChangeNotifier {
     )}";
 
     sendBroadcast(msg);
-      /*NotificationService.showAlert(
+    /*NotificationService.showAlert(
           "Sent sync Message",
           msg,
           'chat_channel'
-        );  */  
+        );  */
 
   }
 
@@ -464,7 +464,7 @@ class P2PViewModel extends ChangeNotifier {
     )}";
 
     _service.clientInterface.broadcastText(msg);
-      /*NotificationService.showAlert(
+    /*NotificationService.showAlert(
           "Sent ping Message",
           msg,
           'chat_channel'
@@ -500,7 +500,7 @@ class P2PViewModel extends ChangeNotifier {
     if (isHost) {
       await _service.hostInterface.broadcastText('${senderId}|${text}');
     } else {
-      await _service.clientInterface.broadcastText('${senderId}|${text}'); 
+      await _service.clientInterface.broadcastText('${senderId}|${text}');
     }
 
     Message newMessage = Message(
@@ -511,16 +511,16 @@ class P2PViewModel extends ChangeNotifier {
       timestamp: DateTime.now().toIso8601String(),
       delivered: 0,
     );
-  
+
     _messageDao.insertMessage(newMessage);
 
     await refreshMessages('ALL');
     updateLastMessageSummary('ALL');
-  }    
-  
+  }
+
   // REQ:resourceOwner:requester
   Future<void> requestResource(Resource resource, String name) async{
-      await sendBroadcast("REQ:${resource.owner}:$name");
+    await sendBroadcast("REQ:${resource.owner}:$name");
   }
 
 

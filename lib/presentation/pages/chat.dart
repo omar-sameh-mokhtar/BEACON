@@ -1,36 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_p2p_connection/flutter_p2p_connection.dart';
-
 import 'package:provider/provider.dart';
 import '../../viewmodels/p2p_viewmodel.dart';
 import '../../viewmodels/voice_viewmodel.dart';
-
 
 class ChattingPage extends StatefulWidget {
   final P2pClientInfo target;
   final bool isHost;
   const ChattingPage({super.key, required this.target, required this.isHost});
-  
 
   @override
   State<ChattingPage> createState() => ChattingPageState();
 }
 
 class ChattingPageState extends State<ChattingPage> {
-  
+
   final TextEditingController _ctrl = TextEditingController();
-  
+
   @override
-    void initState() {
-      super.initState();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.read<P2PViewModel>().loadChatWithPeer(widget.target.id);
-      });
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<P2PViewModel>().loadChatWithPeer(widget.target.id);
+    });
   }
 
   @override
   void dispose() {
-    //Provider.of<P2PViewModel>(context, listen: false).closeChat();
     super.dispose();
   }
 
@@ -42,18 +38,18 @@ class ChattingPageState extends State<ChattingPage> {
     final voiceVm = context.watch<VoiceViewModel>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1E1E1F),
+      backgroundColor: const Color(0xFF1E1E1E),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E1E1F),
+        backgroundColor: const Color(0xFF1E1E1E),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
           color: Colors.white,
         ),
-        title: Text("Chat with ${widget.target.username}",
-            style: const TextStyle(color: Colors.white)),
+        title: Text(
+          "Chat with ${widget.target.username}",
+          style: const TextStyle(color: Colors.white),
+        ),
         titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20),
         centerTitle: true,
       ),
@@ -61,25 +57,6 @@ class ChattingPageState extends State<ChattingPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            /*Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                height: height_ * 0.07,
-                width: width_ * 0.95,
-                decoration: const BoxDecoration(
-                  color: Color.fromARGB(255, 48, 48, 48),
-                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.radar, color: Colors.white),
-                    const SizedBox(width: 10),
-                     Text(widget.target.id, style: TextStyle(color: Colors.white)),
-                  ],
-                ),
-              ),
-            ),*/
-            
             SizedBox(height: height_ * 0.01),
             Expanded(
               child: Padding(
@@ -95,39 +72,50 @@ class ChattingPageState extends State<ChattingPage> {
                     padding: const EdgeInsets.all(10),
                     itemCount: vm.currentChatMessages.length,
                     itemBuilder: (context, index) {
-                      
                       final msg = vm.currentChatMessages[index];
-                      //bool isBroadcast = msg.receiverDeviceId == "ALL";
+
+                      if (msg.content.contains("FALL_DETECTED")) {
+                        return const SizedBox.shrink();
+                      }
+
                       bool isMe = msg.senderDeviceId != widget.target.id;
+
                       return GestureDetector(
-                      onTap: () {
-                        voiceVm.speakMessage(msg.content);
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 5),
-                        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                        onTap: () => voiceVm.speakMessage(msg.content),
                         child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: isMe ? Colors.red : Colors.grey[700],
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                msg.content,
-                                style: const TextStyle(color: Colors.white, fontSize: 16),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                msg.timestamp.split('T').last.substring(0, 5),
-                                style: const TextStyle(color: Colors.white54, fontSize: 10),
-                              ),
-                            ],
+                          margin: const EdgeInsets.symmetric(vertical: 5),
+                          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: isMe ? Colors.red : Colors.grey[700],
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: isMe
+                                  ? CrossAxisAlignment.end
+                                  : CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  msg.content,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  msg.timestamp.split('T').last.substring(0, 5),
+                                  style: const TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ));
+                      );
                     },
                   ),
                 ),
@@ -155,7 +143,7 @@ class ChattingPageState extends State<ChattingPage> {
                     ),
                   ),
                   IconButton(
-                  key: const Key("send_message_Button"),
+                    key: const Key("send_message_Button"),
                     icon: const Icon(Icons.send, color: Colors.white),
                     onPressed: () {
                       if (_ctrl.text.isNotEmpty) {
@@ -184,24 +172,11 @@ class ChattingPageState extends State<ChattingPage> {
                   ),
                 ],
               ),
-            ),/*
-            SizedBox(height: height_ * 0.01),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: width_ * 0.025),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  MessageButton('HELP'),
-                  MessageButton('LOCATION'),
-                  MessageButton('MEDICAL'),
-                ],
-              ),
-            ),*/
+            ),
             SizedBox(height: height_ * 0.03),
           ],
         ),
       ),
     );
   }
-
 }
