@@ -22,8 +22,7 @@ class FallDetectionService {
 
   Future<void> loadModel() async {
 
-    print("========== FALL DETECTION ==========");
-    print("Loading AI model...");
+
 
     try {
 
@@ -116,7 +115,7 @@ class FallDetectionService {
 
       double pred = output[0][0];
 
-      print("Prediction Value => $pred");
+
 
       if (pred > 0.5) {
 
@@ -130,7 +129,7 @@ class FallDetectionService {
 
         _fallCounter = 0;
 
-        print("Prediction too low.");
+
       }
 
       if (_fallCounter >= 1) {

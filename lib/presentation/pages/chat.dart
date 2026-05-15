@@ -1,6 +1,13 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_p2p_connection/flutter_p2p_connection.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../../viewmodels/p2p_viewmodel.dart';
 import '../../viewmodels/voice_viewmodel.dart';
 
@@ -14,8 +21,8 @@ class ChattingPage extends StatefulWidget {
 }
 
 class ChattingPageState extends State<ChattingPage> {
-
   final TextEditingController _ctrl = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -27,7 +34,63 @@ class ChattingPageState extends State<ChattingPage> {
 
   @override
   void dispose() {
+    _ctrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickAndSendImage() async {
+    final picked = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 40,
+    );
+    if (picked == null) return;
+    await context.read<P2PViewModel>().sendImageBase64(
+      File(picked.path),
+      widget.target.id,
+    );
+  }
+
+  Future<void> _sendLocation() async {
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) return;
+      }
+      if (permission == LocationPermission.deniedForever) return;
+
+      final Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      final String payload =
+          "LOC|${position.latitude}|${position.longitude}";
+
+      await context.read<P2PViewModel>().sendMessage(
+        payload,
+        widget.target.id,
+        widget.isHost,
+      );
+    } catch (e) {
+      debugPrint("[LOCATION_ERROR] $e");
+    }
+  }
+
+  Future<void> _openInMaps(double lat, double lng) async {
+    final Uri uri = Uri.parse(
+      "https://www.google.com/maps/search/?api=1&query=$lat,$lng",
+    );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  bool _isBase64Image(String content) {
+    return content.startsWith('IMG_BASE64|');
+  }
+
+  bool _isLocation(String content) {
+    return content.startsWith('LOC|');
   }
 
   @override
@@ -43,7 +106,9 @@ class ChattingPageState extends State<ChattingPage> {
         backgroundColor: const Color(0xFF1E1E1E),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            Navigator.pop(context);
+          },
           color: Colors.white,
         ),
         title: Text(
@@ -73,18 +138,136 @@ class ChattingPageState extends State<ChattingPage> {
                     itemCount: vm.currentChatMessages.length,
                     itemBuilder: (context, index) {
                       final msg = vm.currentChatMessages[index];
-
-                      if (msg.content.contains("FALL_DETECTED")) {
-                        return const SizedBox.shrink();
-                      }
-
                       bool isMe = msg.senderDeviceId != widget.target.id;
 
+                      // IMAGE MESSAGE
+                      if (_isBase64Image(msg.content)) {
+                        return GestureDetector(
+                          onTap: () {},
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(vertical: 5),
+                            alignment: isMe
+                                ? Alignment.centerRight
+                                : Alignment.centerLeft,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: isMe ? Colors.red : Colors.grey[700],
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.memory(
+                                      base64Decode(
+                                        msg.content
+                                            .replaceFirst('IMG_BASE64|', ''),
+                                      ),
+                                      width: width_ * 0.55,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return const Icon(
+                                          Icons.broken_image,
+                                          color: Colors.white54,
+                                          size: 50,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    msg.timestamp
+                                        .split('T')
+                                        .last
+                                        .substring(0, 5),
+                                    style: const TextStyle(
+                                      color: Colors.white54,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+
+                      // LOCATION MESSAGE
+                      if (_isLocation(msg.content)) {
+                        final parts = msg.content.split('|');
+                        final double lat = double.tryParse(parts[1]) ?? 0;
+                        final double lng = double.tryParse(parts[2]) ?? 0;
+
+                        return GestureDetector(
+                          onTap: () => _openInMaps(lat, lng),
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(vertical: 5),
+                            alignment: isMe
+                                ? Alignment.centerRight
+                                : Alignment.centerLeft,
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: isMe ? Colors.red : Colors.grey[700],
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: isMe
+                                    ? CrossAxisAlignment.end
+                                    : CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(
+                                    Icons.location_on,
+                                    color: Colors.white,
+                                    size: 28,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    "Lat: ${lat.toStringAsFixed(5)}\nLng: ${lng.toStringAsFixed(5)}",
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    "Tap to open in Maps",
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    msg.timestamp
+                                        .split('T')
+                                        .last
+                                        .substring(0, 5),
+                                    style: const TextStyle(
+                                      color: Colors.white54,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+
+                      // TEXT MESSAGE
                       return GestureDetector(
-                        onTap: () => voiceVm.speakMessage(msg.content),
+                        onTap: () {
+                          voiceVm.speakMessage(msg.content);
+                        },
                         child: Container(
                           margin: const EdgeInsets.symmetric(vertical: 5),
-                          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                          alignment: isMe
+                              ? Alignment.centerRight
+                              : Alignment.centerLeft,
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
@@ -105,7 +288,10 @@ class ChattingPageState extends State<ChattingPage> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  msg.timestamp.split('T').last.substring(0, 5),
+                                  msg.timestamp
+                                      .split('T')
+                                      .last
+                                      .substring(0, 5),
                                   style: const TextStyle(
                                     color: Colors.white54,
                                     fontSize: 10,
@@ -131,6 +317,14 @@ class ChattingPageState extends State<ChattingPage> {
               ),
               child: Row(
                 children: [
+                  IconButton(
+                    icon: const Icon(Icons.image, color: Colors.white),
+                    onPressed: _pickAndSendImage,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.location_on, color: Colors.white),
+                    onPressed: _sendLocation,
+                  ),
                   Expanded(
                     child: TextField(
                       style: const TextStyle(color: Colors.white),
@@ -147,7 +341,8 @@ class ChattingPageState extends State<ChattingPage> {
                     icon: const Icon(Icons.send, color: Colors.white),
                     onPressed: () {
                       if (_ctrl.text.isNotEmpty) {
-                        vm.sendMessage(_ctrl.text, widget.target.id, widget.isHost);
+                        vm.sendMessage(
+                            _ctrl.text, widget.target.id, widget.isHost);
                         _ctrl.clear();
                       }
                     },
